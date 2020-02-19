@@ -1,0 +1,16 @@
+# Compiled Object files
+*.o
+
+# Compiled Dynamic libraries
+*.dll
+
+# ROM files
+*.bin
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
