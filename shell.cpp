@@ -159,10 +159,18 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 			// Disassemble
 			if (param == 1)
 				address = __last_address;
-			else
+			else if (param == 2)
+			{
 				address = (uint16_t)strtol(operand, NULL, 16);
+				i = 10;
+			}
+			else
+			{
+				address = (uint16_t)strtol(operand, NULL, 16);
+				sscanf(operand2,"%d",&i);				
+			}
 				
-			__last_address = d6502(RAM,address,10);
+			__last_address = d6502(RAM,address,i);
 		}
 		else if ( (strcmp(cmd,"pa") == 0) || (strcmp(cmd,"PA") == 0) )
 		{
