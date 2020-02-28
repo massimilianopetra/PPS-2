@@ -14,3 +14,13 @@
 # Executables
 *.exe
 *.out
+
+# Configuration files
+*.cfg
+
+# Supplementary directories
+dsk
+rom
+software
+
+
