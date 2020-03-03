@@ -26,22 +26,22 @@
 class system_io
 {
 	private:
-		uint8_t * _RAM = NULL;
+		uint8_t * _RAM;
 		
-		uint8_t shift = 0;
-		uint8_t altgr = 0;
-		uint8_t ctrl = 0;
+		uint8_t shift;
+		uint8_t altgr;
+		uint8_t ctrl;
 		
-		uint32_t pdl0 = 0;
-		uint32_t pdl1 = 0;
-		uint32_t pdl2 = 0;
-		uint32_t pdl3 = 0;
-		uint32_t pdl0_timer = 0;
-		uint32_t pdl1_timer = 0;
-		uint32_t pdl2_timer = 0;
-		uint32_t pdl3_timer = 0;
+		uint32_t pdl0;
+		uint32_t pdl1;
+		uint32_t pdl2;
+		uint32_t pdl3;
+		uint32_t pdl0_timer;
+		uint32_t pdl1_timer;
+		uint32_t pdl2_timer;
+		uint32_t pdl3_timer;
 		
-		disk *dsk = NULL;
+		disk *dsk;
 		
 	public:
 		system_io(uint8_t *RAM);

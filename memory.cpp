@@ -23,14 +23,16 @@ memory *mem = NULL;
 
 memory::memory()
 {
-	rom = new ROM(_RAM);
+	rom = new ROM(_ROM);
 	Reset();
 }
 
 void memory::Reset()
 {
-	INTCXROM = 0x00;
-    SLOTC3ROM = 0x00;
+	INTCXROM = 0;
+    SLOTC3ROM = 0;
+    BANK1 = 0;
+    HRAMRD = 0;
 }
 
 uint8_t* memory::getRAM()
@@ -56,6 +58,42 @@ int memory::loadCHARROM(char* filename)
 uint8_t memory::read(uint16_t address)
 {
 	uint8_t value = 0;
+	
+	// BANK1 Switch
+	if (address >=0xC080 &&  address <=0xC087) 
+	{ 
+		BANK1 = 0;
+	}
+	if (address >=0xC088 &&  address <=0xC08F) 
+	{ 
+		BANK1 = 1;
+	}
+	
+	// HRAMRD Switch
+	switch(address)
+	{
+		case 0xC080:
+		case 0xC083:
+		case 0xC084:
+		case 0xC087:
+		case 0xC088:
+		case 0xC08B:
+		case 0xC08C:
+		case 0xC08F:
+			HRAMRD = 1;
+			break;
+		
+		case 0xC081:
+		case 0xC082:
+		case 0xC085:
+		case 0xC086:
+		case 0xC089:
+		case 0xC08A:
+		case 0xC08D:
+		case 0xC08E:
+			HRAMRD = 0;
+			break;					
+	}
 	
 	if (address == _KBD) 
 	{ 
@@ -93,7 +131,7 @@ uint8_t memory::read(uint16_t address)
 	{
 		value = INTCXROM;
 	}
-	else if (address >= 0xC080 && address <= 0xC0FF) 
+	else if (address >= 0xC090 && address <= 0xC0FF) 
 	{
 		// Handle devices
 		value = IO->devicectrl(address,_READ,0x00);
@@ -130,6 +168,14 @@ uint8_t memory::read(uint16_t address)
 	{
 		screen_switches &= ~ _LORES_HIRES;
 	}
+	else if (address > 0xCFFF)
+	{
+		// Read ROM
+		if (HRAMRD)
+			value = _RAM[address];
+		else
+			value = _ROM[address];
+	}
   	else
   	{
   		// read RAM
@@ -141,6 +187,43 @@ uint8_t memory::read(uint16_t address)
 
 void memory::write(uint16_t address,uint8_t value)
 {
+
+	// BANK1 Switch
+	if (address >=0xC080 &&  address <=0xC087) 
+	{ 
+		BANK1 = 0;
+	}
+	if (address >=0xC088 &&  address <=0xC08F) 
+	{ 
+		BANK1 = 1;
+	}
+	
+	// HRAMRD Switch
+	switch(address)
+	{
+		case 0xC080:
+		case 0xC083:
+		case 0xC084:
+		case 0xC087:
+		case 0xC088:
+		case 0xC08B:
+		case 0xC08C:
+		case 0xC08F:
+			HRAMRD = 1;
+			break;
+		
+		case 0xC081:
+		case 0xC082:
+		case 0xC085:
+		case 0xC086:
+		case 0xC089:
+		case 0xC08A:
+		case 0xC08D:
+		case 0xC08E:
+			HRAMRD = 0;
+			break;					
+	}
+	
 	if (address == _KBDCR)
 	{
 		_RAM[_KBD] = _RAM[_KBD] & 0x7f;
@@ -200,8 +283,8 @@ void memory::write(uint16_t address,uint8_t value)
 	}
 	else
 	{
-		// Write value in RAM (ROM is mapped from $D000
-		if (address < 0xC100)
+		// Write value in RAM/HRAM  (DON'T WRITE ON PERIPHERAL ROM)
+		if (address < 0xC100 || address > 0xCFFF)
 			_RAM[address] = value;
 	}
 }

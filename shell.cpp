@@ -17,7 +17,7 @@
    
 /* ************************** Prototype ********************** */
 
-uint16_t d6502(uint8_t* memory, uint16_t address, uint16_t nline);
+uint16_t d6502(uint16_t address, uint16_t nline);
 
 uint16_t __last_address = 0;
 
@@ -170,7 +170,7 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				sscanf(operand2,"%d",&i);				
 			}
 				
-			__last_address = d6502(RAM,address,i);
+			__last_address = d6502(address,i);
 		}
 		else if ( (strcmp(cmd,"pa") == 0) || (strcmp(cmd,"PA") == 0) )
 		{

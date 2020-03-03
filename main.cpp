@@ -35,7 +35,7 @@ uint8_t num_break = 0;
 
 /* ************************** Prototype ********************** */
 
-uint16_t d6502(uint8_t* memory, uint16_t address, uint16_t nline);
+uint16_t d6502(uint16_t address, uint16_t nline);
 
 
 
@@ -189,7 +189,7 @@ int main( int argc, char *argv[] )
 			printf("\n");
 	
         	//printf("[%04X] = %02X ; [%04X] = %02X \n",_KBD,RAM[_KBD],_KBDCR,RAM[_KBDCR] );
-        	d6502(mem->getRAM(),pc,1);
+        	d6502(pc,1);
         	printf("\n");
         	IO->diskprint();
 			printf("---------------------------------\n");

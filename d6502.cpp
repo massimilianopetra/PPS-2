@@ -1,11 +1,11 @@
-/* d6502 v0.4 */
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-uint16_t d6502(uint8_t* memory, uint16_t address, uint16_t nline)
+#include "memory.h"
+
+uint16_t d6502(uint16_t address, uint16_t nline)
 {
 
 	int currentbyte;
@@ -64,7 +64,7 @@ uint16_t d6502(uint8_t* memory, uint16_t address, uint16_t nline)
 	while (!quit)
 	{
 		previousbyte = currentbyte;
-		currentbyte = memory[i];
+		currentbyte = mem->read(i);
 		
 		if (paramcount == 0) 
 		{

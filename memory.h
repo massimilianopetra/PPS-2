@@ -28,9 +28,14 @@ class memory
 {
 	private:
 		uint8_t _RAM[0x10000];
+		uint8_t _RAM_BANK1[0x10000];
 		uint8_t _ROM[0x10000];
+		
 		uint8_t INTCXROM;
 		uint8_t SLOTC3ROM;
+		uint8_t BANK1;
+		uint8_t HRAMRD;
+		
 		ROM *rom;
 		
 	public:
