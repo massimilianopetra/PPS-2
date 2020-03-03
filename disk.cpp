@@ -4,6 +4,17 @@
 #include "disk.h"
 #include "nibbilizer.h"
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0') 
+  
 uint8_t _DISK_P5A[256] = {
   0xA2, 0x20, 0xA0, 0x00, 0xA2, 0x03, 0x86, 0x3C, 0x8A, 0x0A, 0x24, 0x3C, 0xF0, 0x10, 0x05, 0x3C, 0x49, 0xFF, 0x29, 0x7E, 0xB0, 0x08, 0x4A, 0xD0, 0xFB, 0x98, 0x9D, 0x56, 0x03, 0xC8, 0xE8, 0x10, 0xE5, 0x20, 0x58, 0xFF, 0xBA, 0xBD, 0x00, 0x01,
   0x0A, 0x0A, 0x0A, 0x0A, 0x85, 0x2B, 0xAA, 0xBD, 0x8E, 0xC0, 0xBD, 0x8C, 0xC0, 0xBD, 0x8A, 0xC0, 0xBD, 0x89, 0xC0, 0xA0, 0x50, 0xBD, 0x80, 0xC0, 0x98, 0x29, 0x03, 0x0A, 0x05, 0x2B, 0xAA, 0xBD, 0x81, 0xC0, 0xA9, 0x56, 0x20, 0xA8, 0xFC, 0x88,
@@ -26,14 +37,15 @@ drive::drive(uint8_t num)
 	write_protect = 0;
 	mounted = 0;	
 	track = 0;
-	sector = 0;
+	ptr = 0;
+	curbyte = 0;
 	phase = 0;
 	rw = 0;
 	power = 0;
 	drvnum = num;
 	sequencer = 0;
-	timming = 0;
 	nib = new nibbilizer();
+	track_data = nib->get_track(0);
 }
 
 int drive::mount(char * filename)
@@ -109,6 +121,13 @@ void drive::stepper(uint8_t p)
 		track = (2*NUM_TRACKS)-1;
 		 
 	phase = p;
+	if ((track % 2) == 0)
+	{
+		ptr = 0;
+		track_data = nib->get_track(track/2);
+		curbyte = track_data[ptr];
+		sequencer = 0;
+	}
 }
 
 void drive::umount()
@@ -121,6 +140,11 @@ void drive::setpower(uint8_t p)
 	power = p;
 }
 
+uint8_t drive::getpower()
+{
+	return power;
+}
+
 uint8_t drive::ismounted()
 {
 	return mounted;
@@ -131,14 +155,48 @@ void drive::setmode(int m)
 	rw = m;
 }
 
-int drive::getmode()
+uint8_t drive::getmode()
 {
 	return rw;
 }
 
+uint8_t drive::getsequencer()
+{
+	return sequencer;
+}
+
+uint8_t drive::clear()
+{
+	sequencer = 0;
+}
+
+uint8_t drive::fetch()
+{
+	uint8_t value;
+	
+	if (sequencer < 8)
+	{
+		value = (curbyte & 0x80) >> 7;
+		curbyte = curbyte << 1;
+		sequencer++;
+		if (sequencer == 8)
+		{
+			ptr++;
+			ptr = ptr % BYTES_PER_NIB_TRACK;
+			curbyte = track_data[ptr];
+		}
+	}
+	else
+	{
+		value = 0x80;
+	}
+	
+	return value;
+}
+
 void drive::print()
 {
-	printf("DRV: %d PWR: %d TRK: %02d SEC: %02d PHA: %d SEQ: %02X",drvnum,power,track,sector,phase,sequencer);
+	printf("DRV: %d PWR: %d HALFTRK: %02d TRK: %02d PTR: %04d BYTE: %02X PHA: %d SEQ: %02X \n",drvnum,power,track,track/2,ptr,track_data[ptr],phase,sequencer);
 }
 
 void drive::load(uint8_t data)
@@ -172,9 +230,28 @@ void disk::init(uint8_t _slot)
 	printf("DISK II installed at %04X \n",start_address);
 }
 
+void disk::print()
+{
+	activedrv->print();
+	printf("DATA_REGISTER "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(data_register)); 
+}
+
+void disk::fetch()
+{
+	uint8_t value;
+	
+	if (activedrv->getpower()) 
+	{
+		value = activedrv->fetch();
+		
+		if (value != 0x80)
+			data_register = (data_register << 1) | value;
+	}
+}
+
 uint8_t disk::controller(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 {
-	uint8_t rw_latch = 0x00;
+	uint8_t value = data_register;
 	
 	//printf("<%d - %d>  ",n,on);
 	//activedrv->print();
@@ -187,8 +264,16 @@ uint8_t disk::controller(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 		case 1:	
 		case 2:
 		case 3:
-			if (on)
-				activedrv->stepper(n);	
+			if (activedrv->getpower())
+			{
+				if (on) 
+				{
+					activedrv->stepper(n);	
+					//data_register = 0x00;
+					//value = 0x00;
+				}
+					
+			}
 			break;
 			
 		// POWER C088,X C089,X
@@ -206,22 +291,30 @@ uint8_t disk::controller(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 		
 		// SHIFT / LOAD C08C,X C08D,X
 		case 6:
-			if (on == 0)
-				rw_latch = activedrv->readwrite();
-			else
-			{
-				if (activedrv->getmode())	
+			if (activedrv->getpower())
+			{			
+				if (on == 0)
 				{
-					// Load data
-					data_register = data;
+					// SHIFT
+					if (activedrv->getsequencer() == 8)
+					{
+						activedrv->clear();
+						data_register = 0x00;
+					}
 				}
 				else
 				{
-					// Check write protect
-					data_register = 0x00; // TODO Check Write Protect
+					if (activedrv->getmode())	
+					{
+						// Load data
+						data_register = data;
+					}
+					else
+					{
+						// Check write protect
+						value = 0x00; // TODO Check Write Protect
+					}			
 				}
-					
-						
 			}
 			break;
 				
@@ -232,8 +325,8 @@ uint8_t disk::controller(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 	}
 	
 	// Reading even address read the latch
-	if (rw == 0 && on == 0)
-		return data_register;
+	if (rw == 0 && on == 0 && activedrv->getpower())
+		return value;
 	else
 		return 0;
 }

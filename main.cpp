@@ -14,198 +14,29 @@
 #include "system_io.h"
 #include "video.h"
 #include "shell.h"
+#include "memory.h"
 
 
 #define XTAL 1000000L
 
 using namespace std;
 
-
-extern const uint8_t _A2ROM[];
-
-
 mos6502 *cpu = NULL;
-ROM *rom;
-uint8_t RAM[0x10000];
+
+
 uint64_t cycles=0;
 uint8_t debug_mode = 0;
-
-#define INTCXROM_OFF	0xC006
-#define INTCXROM_ON		0xC007
-#define INTCXROM_READ	0xC015
-
-uint8_t INTCXROM = 0x00;
-
-#define SLOTC3ROM_OFF	0xC00A
-#define SLOTC3ROM_OFF	0xC00B
-#define SLOTC3ROM_READ	0xC017
-
-#define _READ  0
-#define _WRITE 1
+uint16_t break_address[256];
+uint8_t num_break = 0;
 
 
-uint8_t SLOTC3ROM = 0x00;
+
 
 
 /* ************************** Prototype ********************** */
 
 uint16_t d6502(uint8_t* memory, uint16_t address, uint16_t nline);
 
-
-/* ********************** Memory BUS Functions *************** */  
-
-uint8_t busreader(uint16_t address)
-{
-	uint8_t value = 0;
-	
-	if (address == _KBD) 
-	{ 
-		value = RAM[_KBD];
-	}
-	else if (address == _KBDCR)
-	{
-		RAM[_KBD] = RAM[_KBD] & 0x7f;
-	}
-	else if (address == _SOUND)
-	{
-		IO->sound();
-	}
-	else if ((address & 0xFFF0) == _PDL_TRIGGER)
-	{
-		IO->paddle_trigger();
-	}
-	else if (address == _PDL0)
-	{
-		value = IO->readPDL0();
-	}
-	else if (address == _PDL1)
-	{
-		value = IO->readPDL1();
-	}
-	else if (address == _PDL2)
-	{
-		value = IO->readPDL3();
-	}
-	else if (address == _PDL3)
-	{
-		value = IO->readPDL3();
-	}
-	else if (address == INTCXROM_READ)
-	{
-		value = INTCXROM;
-	}
-	else if (address >= 0xC080 && address <= 0xC0FF) 
-	{
-		// Handle devices
-		value = IO->devicectrl(address,_READ,0x00);
-	}
-	else if (address == _GRPHICS_MODE)
-	{
-		screen_switches |= _TEXT_GRAPHICS;
-	}
-	else if (address == _TEXT_MODE)
-	{
-		screen_switches &= ~ _TEXT_GRAPHICS;
-	}
-	else if (address == _MIX_MODE)
-	{
-		screen_switches |= _ALL_MIX;
-	}
-	else if (address == _ALL_MODE)
-	{
-		screen_switches &= ~ _ALL_MIX;
-	}
-	else if (address == _PAGE2_MODE)
-	{
-		screen_switches |= _PAGE1_PAGE2;
-	}
-	else if (address == _PAGE1_MODE)
-	{
-		screen_switches &= ~ _PAGE1_PAGE2;
-	}
-	else if (address == _HIRES_MODE)
-	{
-		screen_switches |= _LORES_HIRES;
-	}
-	else if (address == _LORES_MODE)
-	{
-		screen_switches &= ~ _LORES_HIRES;
-	}
-  	else
-  	{
-  		// read RAM
-  		value = RAM[address];	
-	}
-	
-	return value;
-}
-
-void buswriter(uint16_t address,uint8_t value)
-{
-	if (address == _KBDCR)
-	{
-		RAM[_KBD] = RAM[_KBD] & 0x7f;
-	}
-	else if (address == _SOUND)
-	{
-		IO->sound();	
-	}
-	else if ((address & 0xFFF0) == _PDL_TRIGGER)
-	{
-		IO->paddle_trigger();
-	}
-	else if (address == INTCXROM_OFF)
-	{
-		INTCXROM = 0x00;
-	}
-	else if (address == INTCXROM_ON)
-	{
-		INTCXROM = 0x80;
-	}
-	else if (address >= 0xC080 && address <= 0xC0FF) 
-	{
-		// Handle devices
-		IO->devicectrl(address,_WRITE,value);
-	}
-	else if (address == _GRPHICS_MODE)
-	{
-		screen_switches |= _TEXT_GRAPHICS;
-	}
-	else if (address == _TEXT_MODE)
-	{
-		screen_switches &= ~ _TEXT_GRAPHICS;
-	}
-	else if (address == _MIX_MODE)
-	{
-		screen_switches |= _ALL_MIX;
-	}
-	else if (address == _ALL_MODE)
-	{
-		screen_switches &= ~ _ALL_MIX;
-	}
-	else if (address == _PAGE2_MODE)
-	{
-		screen_switches |= _PAGE1_PAGE2;
-	}
-	else if (address == _PAGE1_MODE)
-	{
-		screen_switches &= ~ _PAGE1_PAGE2;
-	}
-	else if (address == _HIRES_MODE)
-	{
-		screen_switches |= _LORES_HIRES;
-	}
-	else if (address == _LORES_MODE)
-	{
-		screen_switches &= ~ _LORES_HIRES;
-	}
-	else
-	{
-		// Write value in RAM (ROM is mapped from $D000
-		if (address < 0xC100)
-			RAM[address] = value;
-	}
-}
 
 
 /* ************************** Main ********************** */
@@ -237,18 +68,22 @@ int main( int argc, char *argv[] )
 	// Main loop flag
 	bool quit = false;
 	
-	printf("ROM   init ... \n");
+	printf("MEMORY   init ... \n");
 	fflush(stdout);
-	rom = new ROM(RAM);
-	i = rom->loadROM(0xD000,12288,"A2ROM.bin");
+	
+	mem = new memory();
+	
+	i = mem->loadROM(0xD000,12288,"A2ROM.bin");
 	if (i != 12288)
 		printf("Failed to load A2ROM.bin \n");
-	i = rom->loadCHARROM("CHARGEN.bin");
+	i = mem->loadCHARROM("CHARGEN.bin");
 	if (i != 0)
 		printf("Failed to load CHARGEN.bin \n");
 
+	printf("init OK\n");
+	
 	printf("I/O   init ...  \n");
-	IO = new system_io(RAM);
+	IO = new system_io(mem->getRAM());
 	printf("init OK\n");
 			
 	// Load config file
@@ -271,7 +106,7 @@ int main( int argc, char *argv[] )
 					start_address = strtoul (p1, NULL, 16);
 					if (start_address >= 0xC100)
 					{
-						i = rom->loadROM(start_address,filename);
+						i = mem->loadROM(start_address,filename);
 						if (i > 0)
 							printf("upload %d bytes at %04X from: %s \n",i,start_address,filename);
 					}
@@ -305,6 +140,15 @@ int main( int argc, char *argv[] )
 							printf("Disk wrong format FILE: %s\n",filename);	
 						*/
 					}	
+				}
+			}
+			else if (strcmp(cmd,"BRK") == 0)
+			{
+				i = sscanf(line,"%s %s %s",cmd,p1);	
+				if (i == 2)
+				{
+					start_address = strtoul (p1, NULL, 16);
+						
 				}
 			}
 		}
@@ -345,10 +189,13 @@ int main( int argc, char *argv[] )
 			printf("\n");
 	
         	//printf("[%04X] = %02X ; [%04X] = %02X \n",_KBD,RAM[_KBD],_KBDCR,RAM[_KBDCR] );
-        	d6502(RAM,pc,1);
-        	printf("---------------------------------\n");
+        	d6502(mem->getRAM(),pc,1);
+        	printf("\n");
+        	IO->diskprint();
+			printf("---------------------------------\n");
+        	
         	i = IO->keyboard();
-        	video_refresh(RAM);
+        	video_refresh(mem->getRAM());
         	
         	while (i != 7 && i != 6)
 			{
@@ -365,6 +212,7 @@ int main( int argc, char *argv[] )
         
         elapsed = cpu->Run(1,cycles);
         IO->paddle_timer(elapsed);
+        IO->diskfetch();
         
         io_count += elapsed;
         
@@ -379,15 +227,14 @@ int main( int argc, char *argv[] )
         			clearscreen();
         			cpu->Reset();
         			IO->Reset();
-        			INTCXROM = 0x00;
-        			SLOTC3ROM = 0x00;
+        			mem->Reset();
         			break;
         		case 2:
         			// Load
         			printf("***** LOAD *****\n");
         			printf("Insert filename :\n");
         			scanf("%s",filename);
-        			load(filename,RAM,cpu);
+        			load(filename,mem->getRAM(),cpu);
         			break;
         		case 3:
         			// Cleat Screen
@@ -402,7 +249,7 @@ int main( int argc, char *argv[] )
         		case 5:
         			// Quit
         			printf("***** PASTE *****\n");
-					paste(RAM,cpu);
+					paste(mem->getRAM(),cpu);
         			break;
         		case 6:
         			// Debug
@@ -411,7 +258,7 @@ int main( int argc, char *argv[] )
         			break;
         		case 8:
         			// Shell Prompt
-        			shell_prompt(RAM,cpu);
+        			shell_prompt(mem->getRAM(),cpu);
         			break;
         			
         		default:
@@ -419,7 +266,7 @@ int main( int argc, char *argv[] )
         			break;
 			}
 			
-			video_refresh(RAM);
+			video_refresh(mem->getRAM());
 			
 			io_count = 0;
     	}

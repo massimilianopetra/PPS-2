@@ -183,6 +183,15 @@ void system_io::Reset()
 	}	
 }
 
+void system_io::diskfetch()
+{
+	dsk->fetch();
+}
+
+void system_io::diskprint()
+{
+	dsk->print();
+}
 void system_io::paddle_trigger()
 {
 	pdl0_timer = pdl0;

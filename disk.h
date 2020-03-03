@@ -13,13 +13,14 @@ class drive
 		uint8_t *image;
 		uint8_t mounted; 
 		int8_t track;
-		int8_t sector;
+		uint8_t* track_data;
+		uint16_t ptr;
+		uint8_t curbyte;
 		uint8_t rw;
 		uint8_t power;
 		uint8_t drvnum;
 		uint8_t sequencer;
 		uint8_t write_protect;
-		uint64_t timming;
 		nibbilizer *nib;
 	
 	public:
@@ -28,13 +29,17 @@ class drive
 		int mount(char * filenane);
 		void umount();
 		void setmode(int rw);
-		int getmode();
+		uint8_t getmode();
+		uint8_t getsequencer();
+		uint8_t clear();
 		uint8_t ismounted();
 		void stepper(uint8_t p);
 		void setpower(uint8_t p);
+		uint8_t getpower();
 		uint8_t readwrite();
 		void load(uint8_t data);
 		void savenib(char * filename);
+		uint8_t fetch();
 		
 };
 
@@ -57,6 +62,8 @@ class disk
 		int diskmount(char *filename, int drvnum);
 		void reset();
 		void savenib(char * filename,int drvnum);
+		void fetch();
+		void print();
 		
 };
 

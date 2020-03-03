@@ -76,6 +76,11 @@ void nibbilizer::convert(uint8_t *dsk)
 	}
 }
 
+uint8_t* nibbilizer::get_track(uint8_t t)
+{
+	return track_buffer[t];
+}
+
 int nibbilizer::save(char* filename)
 {
 	FILE *fp;
