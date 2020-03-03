@@ -28,6 +28,7 @@ uint64_t cycles=0;
 uint8_t debug_mode = 0;
 uint16_t break_address[256];
 uint8_t num_break = 0;
+int32_t xtal = XTAL;
 
 
 
@@ -151,6 +152,27 @@ int main( int argc, char *argv[] )
 						
 				}
 			}
+			else if (strcmp(cmd,"XTAL") == 0) 
+			{
+				i = sscanf(line,"%s %s %s",cmd,p1);
+				if (i == 2)
+				{
+					sscanf(p1,"%d",&i);
+					if (i >  1000000)
+					{
+						xtal = i;
+						printf("SET XTAL: %.2f MHz\n",xtal/1000000.);	
+					}
+					else
+					{
+						printf("*** SET XTAL too low: %.2f MHz\n",i/1000000.);
+					}
+			}
+			else
+			{
+				printf("*** Syntax Error\n");
+			}
+			}
 		}
 	}
 	
@@ -272,11 +294,11 @@ int main( int argc, char *argv[] )
     	}
     	
     	// Wait for 6502 1 MHz accuracy
-    	deltaTime = (double)((NOW - LAST)*1000000 / (double)SDL_GetPerformanceFrequency());
+    	deltaTime = (double)((NOW - LAST)*xtal / (double)SDL_GetPerformanceFrequency());
     	while(deltaTime < elapsed)
     	{
     		NOW = SDL_GetPerformanceCounter();
-    		deltaTime = (double)((NOW - LAST)*1000000 / (double)SDL_GetPerformanceFrequency());
+    		deltaTime = (double)((NOW - LAST)*xtal / (double)SDL_GetPerformanceFrequency());
 		}
 		
     	LAST = NOW;

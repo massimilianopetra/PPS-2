@@ -173,7 +173,7 @@ uint8_t drive::clear()
 uint8_t drive::fetch()
 {
 	uint8_t value;
-	
+
 	if (sequencer < 8)
 	{
 		value = (curbyte & 0x80) >> 7;
@@ -190,7 +190,7 @@ uint8_t drive::fetch()
 	{
 		value = 0x80;
 	}
-	
+
 	return value;
 }
 
@@ -239,7 +239,7 @@ void disk::print()
 void disk::fetch()
 {
 	uint8_t value;
-	
+
 	if (activedrv->getpower()) 
 	{
 		value = activedrv->fetch();

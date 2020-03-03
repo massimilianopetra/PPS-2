@@ -18,6 +18,7 @@
 /* ************************** Prototype ********************** */
 
 uint16_t d6502(uint16_t address, uint16_t nline);
+extern int32_t xtal;
 
 uint16_t __last_address = 0;
 
@@ -150,7 +151,7 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 		fgets(line,255,stdin);
 		param = sscanf(line,"%s %s %s",cmd,operand,operand2);
 		
-		if ((strcmp(cmd,"quit") == 0) ||  (strcmp(cmd,"q") == 0) || (strcmp(cmd,"Q") == 0))
+		if ((strcmp(cmd,"done") == 0) ||  (strcmp(cmd,"DONE") == 0) || (strcmp(cmd,"q") == 0) || (strcmp(cmd,"Q") == 0))
 		{
 			return;
 		}
@@ -230,6 +231,26 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				else
 				{
 					printf("*** Disknumber out of range\n");
+				}
+				
+			}
+			else
+			{
+				printf("*** Syntax Error\n");
+			}
+		}
+		else if ( (strcmp(cmd,"xtal") == 0) || (strcmp(cmd,"XTAL") == 0) )
+		{
+			if (param == 2)
+			{
+				sscanf(operand,"%d",&i);
+				if (i >  1000000)
+				{
+					xtal = i;	
+				}
+				else
+				{
+					printf("*** XTAL too low\n");
 				}
 				
 			}
