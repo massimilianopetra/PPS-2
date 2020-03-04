@@ -144,6 +144,7 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 	int param;
 	int len;
 	int i;
+	int drv;
 	
 	while(1)
 	{
@@ -219,32 +220,40 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				printf("*** Syntax Error\n");
 			}
 		}
-		else if ( (strcmp(cmd,"mount") == 0) || (strcmp(cmd,"MOUNT") == 0) )
+		else if ((strcmp(cmd,"mount") == 0) || (strcmp(cmd,"MOUNT") == 0))
 		{
-			if (param == 3)
+			i = sscanf(line, "%s %d",cmd,&drv);
+			if (i == 2)
 			{
-				sscanf(operand,"%d",&i);
-				if (i>0 && i<3)
+				if (drv == 1 || drv == 2)
 				{
-					IO->diskmount(operand2,i);	
+					i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand2);
+					if (i == 1)
+					{
+						i = IO->diskmount(operand2,drv);
+					}
+					else
+					{	
+						printf("*** Mount wrong filename\n");
+					}
 				}
 				else
 				{
-					printf("*** Disknumber out of range\n");
-				}
-				
+					printf("*** Mount wrong disk number %d \n",drv);
+				}	
 			}
 			else
 			{
-				printf("*** Syntax Error\n");
+				printf("*** Mount wrong mount command\n");
 			}
+			
 		}
 		else if ( (strcmp(cmd,"xtal") == 0) || (strcmp(cmd,"XTAL") == 0) )
 		{
 			if (param == 2)
 			{
 				sscanf(operand,"%d",&i);
-				if (i >  1000000)
+				if (i >=  1000000)
 				{
 					xtal = i;	
 				}

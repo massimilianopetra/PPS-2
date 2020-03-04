@@ -57,13 +57,13 @@ int drive::mount(char * filename)
 	fp=fopen(filename,"rb");
 	if (fp == NULL)
 	{
-		//printf("Drive %d: can't open FILE: %s\n",drvnum,filename);
+		printf("Drive %d: can't open FILE: %s\n",drvnum,filename);
 		return -1;
 	}
 		
 	if (fread(image,1,DISK_SIZE,fp) != DISK_SIZE)
 	{
-		//printf("Drive %d: wrong disk format\n",drvnum);
+		printf("Drive %d: wrong disk format\n",drvnum);
 		return -2;		 
 	}
 		

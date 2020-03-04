@@ -97,6 +97,7 @@ int main( int argc, char *argv[] )
 	{
 		while(fgets(line,255,fpcfg) != NULL)
 		{
+			cmd[0] = '\0';
 			sscanf(line,"%s",cmd);
 			
 			if (strcmp(cmd,"ROM") == 0)
@@ -125,23 +126,31 @@ int main( int argc, char *argv[] )
 			}
 			else if (strcmp(cmd,"MOUNT") == 0)
 			{
-				i = sscanf(line,"%s %s %s",cmd,p1,filename);	
-				if (i == 3)
+				i = sscanf(line, "%s %d",cmd,&drv);
+				if (i == 2)
 				{
-					sscanf(p1,"%d",&drv);
-					if (drv >= 1 && drv <= 2)
+					if (drv == 1 || drv == 2)
 					{
-						i = IO->diskmount(filename,drv);
-						/*
-						if (i == 0)
-							printf("Disk mounted on DRIVE %d with FILE: %s\n",drv,filename);
-						else if (i == -1)
-							printf("Disk can't open FILE: %s\n",filename);
-						else if (i == -2)
-							printf("Disk wrong format FILE: %s\n",filename);	
-						*/
+						i = sscanf(line, "%*[^']'%[^']'%*[^\n]",filename);
+						if (i == 1)
+						{
+							i = IO->diskmount(filename,drv);
+						}
+						else
+						{	
+							printf("*** Mount wrong filename\n");
+						}
+					}
+					else
+					{
+						printf("*** Mount wrong disk number %d \n",drv);
 					}	
 				}
+				else
+				{
+					printf("*** Mount wrong mount command\n");
+				}
+				
 			}
 			else if (strcmp(cmd,"BRK") == 0)
 			{
@@ -158,7 +167,7 @@ int main( int argc, char *argv[] )
 				if (i == 2)
 				{
 					sscanf(p1,"%d",&i);
-					if (i >  1000000)
+					if (i >=  1000000)
 					{
 						xtal = i;
 						printf("SET XTAL: %.2f MHz\n",xtal/1000000.);	
@@ -167,11 +176,7 @@ int main( int argc, char *argv[] )
 					{
 						printf("*** SET XTAL too low: %.2f MHz\n",i/1000000.);
 					}
-			}
-			else
-			{
-				printf("*** Syntax Error\n");
-			}
+				}			
 			}
 		}
 	}
