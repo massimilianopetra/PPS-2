@@ -62,6 +62,7 @@ class system_io
 		void disksavenib(char *filename, int drvnum);
 		void diskfetch();
 		void diskprint();
+		void diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
 };
 
 extern system_io *IO;

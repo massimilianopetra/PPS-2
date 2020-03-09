@@ -10,10 +10,13 @@
 
 #include <stdint.h>
 #include "SDL2/SDL.h"
+#include "gui.h"
 
 // Screen dimension constants
 #define SCREEN_WIDTH  560
 #define SCREEN_HEIGHT 384
+
+
 
 // Text/LoRes Primary 40x24
 #define _LO_RES1	0x0400
@@ -50,6 +53,7 @@ extern uint8_t screen_switches;
 
 extern SDL_Window* window;
 extern SDL_Surface* screenSurface;
+extern SDL_Renderer* Main_Renderer;
 
 void video_init();
 void video_test();

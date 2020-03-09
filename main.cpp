@@ -15,7 +15,7 @@
 #include "video.h"
 #include "shell.h"
 #include "memory.h"
-
+#include "gui.h"
 
 #define XTAL 1000000L
 
@@ -54,8 +54,9 @@ int main( int argc, char *argv[] )
 	char p1[32];
 	char peripheral[32];
 	
-	uint16_t start_address;
 	uint8_t _A,_X,_Y,_SP,_P;
+	uint8_t gui_count = 0;
+	uint16_t start_address;
 	uint64_t elapsed;
 	uint64_t io_count = 0;
 	uint64_t NOW = 0;
@@ -255,6 +256,9 @@ int main( int argc, char *argv[] )
         			cpu->Reset();
         			IO->Reset();
         			mem->Reset();
+#ifdef WITHGUI
+					initgui();
+#endif
         			break;
         		case 2:
         			// Load
@@ -295,6 +299,13 @@ int main( int argc, char *argv[] )
 			
 			video_refresh(mem->getRAM());
 			
+#ifdef WITHGUI
+			if (gui_count == 0)
+				refreshgui();
+			gui_count ++;
+			gui_count %= 25;
+#endif
+			
 			io_count = 0;
     	}
     	
@@ -308,7 +319,6 @@ int main( int argc, char *argv[] )
 		
     	LAST = NOW;
    } 
-
 
 	//Destroy window
     SDL_DestroyWindow( window );

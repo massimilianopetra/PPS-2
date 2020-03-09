@@ -47,6 +47,8 @@ class memory
 		int loadROM(uint16_t startAddress, uint16_t len, char *filename);
 		int loadROM(uint16_t startAddress, char *filename);
 		int loadCHARROM(char* filename);
+		uint8_t getBANK1();
+		uint8_t getHRAMRD();
 };
 
 extern memory *mem;

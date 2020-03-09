@@ -336,6 +336,14 @@ uint8_t drive::readwrite()
 	return 0x00;
 }
 
+void drive::debug(uint8_t *_drvnum,uint8_t *_pwr, int8_t *_halftrk, uint16_t *_ptr)
+{
+	*_drvnum = drvnum;
+	*_pwr = power;
+	*_halftrk = track;
+	*_ptr = ptr;
+}
+
 uint8_t disk::getslot()
 {
  	return slot;
@@ -365,3 +373,22 @@ void disk::reset()
 {
 	data_register = 0;
 }
+
+void disk::debug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2)
+{
+	uint8_t dummy;
+	
+	activedrv->debug(_activedrv,_pwr1,_halftrk1,_ptr1);
+	if (*_activedrv == 1)
+	{
+		drv2->debug(&dummy,_pwr2,_halftrk2,_ptr2);
+	}
+	else
+	{
+		*_pwr2 = *_pwr1;
+		*_halftrk2 = *_halftrk1;
+		*_ptr2 = *_ptr1;
+		drv1->debug(&dummy,_pwr1,_halftrk1,_ptr1);
+	}
+}
+

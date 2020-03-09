@@ -7,10 +7,14 @@
    
 #include <stdio.h>
 #include "video.h"
+#include "gui.h"
 #include "rom.h"
 
 //The window we'll be rendering to
 SDL_Window* window = NULL;
+
+//The renderer (used by DSL2 drawing API)
+SDL_Renderer* Main_Renderer;
 
 //The surface contained by the window0
 SDL_Surface* screenSurface = NULL;
@@ -78,7 +82,7 @@ void video_refresh(uint8_t *RAM)
 		else
 			base_address = _LO_RES2;
 			
-		for (r=0;r<screenSurface->h/2;r++)
+		for (r=0;r<SCREEN_HEIGHT/2;r++)
 		{
 			text_r = r / 8;
 			
@@ -149,7 +153,7 @@ void video_refresh(uint8_t *RAM)
 		else
 			base_address = _LO_RES2;
 		
-		for (r=0;r<screenSurface->h/2;r++)
+		for (r=0;r<SCREEN_HEIGHT/2;r++)
 		{
 			text_r = r / 8;
 			gr_r = r / 4;
@@ -243,7 +247,7 @@ void video_refresh(uint8_t *RAM)
 		}
 			
 		
-		for (r=0;r<screenSurface->h/2;r++)
+		for (r=0;r<SCREEN_HEIGHT/2;r++)
 		{
 			text_r = r / 8;
 			gr_r = r % 8;
@@ -340,30 +344,13 @@ void video_refresh(uint8_t *RAM)
 							}
 						}
 					}	
-					
-					/*
-					if (c_val & 0x01)
-					{
-						v = 0x00ffffff;	
-					}
-					else
-					{
-						v = 0x00000000;
-					}
-					*/
-						
-					
+										
 					c_val = c_val >> 1;
 				}
-				
-				
-				//printf("%02X %x \n",char_byte,v);
 				
 				// Quadruple pixel effect
 				pixels[screenSurface->w*(2*r)+c*2]=v;
 				pixels[screenSurface->w*(2*r)+c*2+1]=v;
-				//pixels[screenSurface->w*(2*r+1)+c*2]=v;
-				//pixels[screenSurface->w*(2*r+1)+c*2+1]=v;
 				
 				if (REVERSE_CHAR_ROM)
 					char_byte = char_byte >> 1;
@@ -385,8 +372,13 @@ void video_init()
     }
     else
     {
+    	
         //Create window
+#ifdef WITHGUI
+        window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT_DBG, SDL_WINDOW_SHOWN );
+#else
         window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+#endif
         if( window == NULL )
         {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -394,15 +386,19 @@ void video_init()
         else
         {
             // Get window surface
-            screenSurface = SDL_GetWindowSurface( window );
-			
-
+            screenSurface = SDL_GetWindowSurface(window);
+            Main_Renderer =	SDL_CreateSoftwareRenderer(screenSurface);
         }
     }
     		
     		
     pixels = (uint32_t *)screenSurface->pixels;
     clearscreen();     
+
+#ifdef WITHGUI
+    initgui();
+#endif
+
 }
 
 void video_test()

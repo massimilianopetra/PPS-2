@@ -40,6 +40,16 @@ uint8_t* memory::getRAM()
 	return _RAM;
 }
 
+uint8_t memory::getBANK1()
+{
+	return BANK1;
+}
+
+uint8_t memory::getHRAMRD()
+{
+	return HRAMRD;
+}
+
 int memory::loadROM(uint16_t startAddress, uint16_t len, char *filename)
 {
 	return rom->loadROM(startAddress,len,filename);

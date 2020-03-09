@@ -40,6 +40,7 @@ class drive
 		void load(uint8_t data);
 		void savenib(char * filename);
 		uint8_t fetch();
+		void debug(uint8_t *_drvnum,uint8_t *_pwr, int8_t *_halftrk, uint16_t *_ptr);
 		
 };
 
@@ -64,6 +65,7 @@ class disk
 		void savenib(char * filename,int drvnum);
 		void fetch();
 		void print();
+		void debug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
 		
 };
 

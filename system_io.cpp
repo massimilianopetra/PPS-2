@@ -436,4 +436,9 @@ void system_io::sound()
 	;
 }
 
+void system_io::diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2)
+{
+	dsk->debug(_activedrv,_pwr1,_halftrk1,_ptr1,_pwr2,_halftrk2,_ptr2);
+}
+
 
