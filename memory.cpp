@@ -33,6 +33,8 @@ void memory::Reset()
     SLOTC3ROM = 0;
     BANK1 = 0;
     HRAMRD = 0;
+    HRAMRD = 0;
+    PREWRITE = 0;
 }
 
 uint8_t* memory::getRAM()
@@ -48,6 +50,11 @@ uint8_t memory::getBANK1()
 uint8_t memory::getHRAMRD()
 {
 	return HRAMRD;
+}
+
+uint8_t memory::getHRAMWRT()
+{
+	return HRAMWRT;
 }
 
 int memory::loadROM(uint16_t startAddress, uint16_t len, char *filename)
@@ -182,7 +189,16 @@ uint8_t memory::read(uint16_t address)
 	{
 		// Read ROM
 		if (HRAMRD)
-			value = _RAM[address];
+		{
+			if (BANK1 == 1 && address < 0xE000)
+			{
+				value = _RAM_BANK1[address-0xD000];
+			}
+			else
+			{
+				value = _RAM[address];
+			}
+		}
 		else
 			value = _ROM[address];
 	}
@@ -295,7 +311,21 @@ void memory::write(uint16_t address,uint8_t value)
 	{
 		// Write value in RAM/HRAM  (DON'T WRITE ON PERIPHERAL ROM)
 		if (address < 0xC100 || address > 0xCFFF)
-			_RAM[address] = value;
+		{
+			if (address >= 0xD000 && HRAMWRT == 0)
+			{
+				if (BANK1 == 1 && address < 0xE000)
+				{
+					_RAM_BANK1[address-0xD000] = value;
+				}
+				else
+				{
+					_RAM[address] = value;
+				}
+			}
+			else
+				_RAM[address] = value;
+		}
 	}
 }
 

@@ -28,13 +28,15 @@ class memory
 {
 	private:
 		uint8_t _RAM[0x10000];
-		uint8_t _RAM_BANK1[0x10000];
+		uint8_t _RAM_BANK1[0x1000];
 		uint8_t _ROM[0x10000];
 		
 		uint8_t INTCXROM;
 		uint8_t SLOTC3ROM;
 		uint8_t BANK1;
 		uint8_t HRAMRD;
+		uint8_t HRAMWRT;
+		uint8_t PREWRITE;
 		
 		ROM *rom;
 		
@@ -49,6 +51,7 @@ class memory
 		int loadCHARROM(char* filename);
 		uint8_t getBANK1();
 		uint8_t getHRAMRD();
+		uint8_t getHRAMWRT();
 };
 
 extern memory *mem;

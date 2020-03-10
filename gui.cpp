@@ -1,15 +1,89 @@
+#include <stdio.h>
+
 #include "video.h"
 #include "gui.h"
 #include "system_io.h"
 #include "memory.h"
+#include "rom.h"
 
 
 #define DRV1STARTX  10
 #define DRV2STARTX 100
-#define DRV1STARTY  (SCREEN_HEIGHT+25)
-#define DRV2STARTY  (SCREEN_HEIGHT+25)
+#define DRV1STARTY  (SCREEN_HEIGHT+30)
+#define DRV2STARTY  (SCREEN_HEIGHT+30)
 #define HRAMSTARTX 180
-#define HRAMSTARTY  (SCREEN_HEIGHT+25)
+#define HRAMSTARTY  (SCREEN_HEIGHT+30)
+
+
+
+drawchar(int x,int y,uint8_t c, uint8_t r, uint8_t g, uint8_t b,uint8_t big)
+{
+	int i,j;
+	uint8_t char_byte;
+	
+	SDL_SetRenderDrawColor(Main_Renderer, r, g, b, 255);
+	
+	for (i=0;i<8;i++)
+	{
+		char_byte = _CHARROM[c*8+i] & 0b01111110;
+	
+		for (j = 0; j<8;j++)
+		{
+			if (REVERSE_CHAR_ROM)
+			{
+				if (char_byte & 0x01)
+				{
+					if (big)
+					{
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2, y+i*2);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2+1, y+i*2);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2, y+i*2+1);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2+1, y+i*2+1);
+					}
+					else
+						SDL_RenderDrawPoint(Main_Renderer, x+j, y+i);
+				}
+			
+				char_byte = char_byte >> 1;	
+			}
+			else
+			{
+				if (char_byte & 0x80)
+				{
+					if (big)
+					 {
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2, y+i*2);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2+1, y+i*2);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2, y+i*2+1);
+						SDL_RenderDrawPoint(Main_Renderer, x+j*2+1, y+i*2+1);					 	
+					 }
+					else
+						SDL_RenderDrawPoint(Main_Renderer, x+j, y+i);
+				}
+
+				char_byte = char_byte << 1;
+			}						
+		}
+	}
+												
+}
+
+drawstring(int x,int y,char *s, uint8_t r, uint8_t g, uint8_t b,uint8_t big)
+{
+	int i=0;
+
+	while(s[i] != '\0')
+	{
+		drawchar(x,y,s[i]-64,r,g,b,big);
+		if (big)
+			x += 16;
+		else
+			x += 9;
+		
+		i++;	
+	}
+	
+}
 
 void initgui()
 {
@@ -34,7 +108,8 @@ void initgui()
 
 	// DISK II
 	
-	
+	drawstring(DRV1STARTX+20,DRV1STARTY-21,"DISK II",0,0,0,1);
+		
 	// DRIVE1
 	rect.x = DRV1STARTX;
 	rect.y = DRV1STARTY;
@@ -71,10 +146,13 @@ void initgui()
 	
 	
 	// HRAM
+	
+	drawstring(HRAMSTARTX-2,HRAMSTARTY-21,"HRAM",0,0,0,1);
+	
 	rect.x = HRAMSTARTX;
 	rect.y = HRAMSTARTY;
-	rect.w = 34;
-	rect.h = 15;
+	rect.w = 62;
+	rect.h = 20;
 	SDL_SetRenderDrawColor(Main_Renderer, 0, 0, 0, 255);
 	SDL_RenderDrawRect(Main_Renderer, &rect);
 	
@@ -132,7 +210,7 @@ void refreshgui()
 	
 	// HRAM POWER LED    
 	
-	rect.x = HRAMSTARTX+4;
+	rect.x = HRAMSTARTX+6;
 	rect.y = HRAMSTARTY+4;
 	rect.w = 6;
 	rect.h = 4;
@@ -147,12 +225,27 @@ void refreshgui()
 	}
 	SDL_RenderFillRect(Main_Renderer, &rect);
 
-	rect.x = HRAMSTARTX+14;
+	rect.x = HRAMSTARTX+19;
 	rect.y = HRAMSTARTY+4;
 	rect.w = 6;
 	rect.h = 4;
 	
-	if (mem->getHRAMRD() != 0 && mem->getBANK1() != 0) 
+	if (mem->getHRAMWRT() == 0)
+	{
+	    SDL_SetRenderDrawColor(Main_Renderer, 00, 255, 00, 255);			
+	}
+	else
+	{
+		SDL_SetRenderDrawColor(Main_Renderer, 00, 70, 00, 255);	
+	}
+	SDL_RenderFillRect(Main_Renderer, &rect);
+	
+	rect.x = HRAMSTARTX+32;
+	rect.y = HRAMSTARTY+4;
+	rect.w = 6;
+	rect.h = 4;
+	
+	if (mem->getBANK1() != 0) 
 	{
 	    SDL_SetRenderDrawColor(Main_Renderer, 255, 00, 00, 255);			
 	}
@@ -162,12 +255,12 @@ void refreshgui()
 	}
 	SDL_RenderFillRect(Main_Renderer, &rect);
 
-	rect.x = HRAMSTARTX+24;
+	rect.x = HRAMSTARTX+45;
 	rect.y = HRAMSTARTY+4;
 	rect.w = 6;
 	rect.h = 4;
 	
-	if (mem->getHRAMRD() != 0 && mem->getBANK1() == 0) 
+	if (mem->getBANK1() == 0) 
 	{
 	    SDL_SetRenderDrawColor(Main_Renderer, 255, 00, 00, 255);			
 	}
@@ -179,4 +272,6 @@ void refreshgui()
 		
 	SDL_UpdateWindowSurface(window);
 }
+
+
 

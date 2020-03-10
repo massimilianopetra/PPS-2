@@ -10,6 +10,9 @@
 #include "gui.h"
 #include "rom.h"
 
+// Gui debug
+extern uint8_t guidebug;
+
 //The window we'll be rendering to
 SDL_Window* window = NULL;
 
@@ -375,7 +378,11 @@ void video_init()
     	
         //Create window
 #ifdef WITHGUI
-        window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT_DBG, SDL_WINDOW_SHOWN );
+		if(guidebug)
+        	window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT_DBG, SDL_WINDOW_SHOWN );
+        else
+        	window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+        	
 #else
         window = SDL_CreateWindow( "PPS-2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 #endif
@@ -396,7 +403,8 @@ void video_init()
     clearscreen();     
 
 #ifdef WITHGUI
-    initgui();
+	if(guidebug)
+    	initgui();
 #endif
 
 }

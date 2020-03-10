@@ -29,7 +29,7 @@ uint8_t debug_mode = 0;
 uint16_t break_address[256];
 uint8_t num_break = 0;
 int32_t xtal = XTAL;
-
+uint8_t guidebug = 0;
 
 
 
@@ -179,6 +179,13 @@ int main( int argc, char *argv[] )
 					}
 				}			
 			}
+#ifdef WITHGUI
+			else if (strcmp(cmd,"GUIDEBUG") == 0) 
+			{
+				guidebug = 0x80;
+				printf("*** GUI DEBUG ENABLED\n");
+			}
+#endif
 		}
 	}
 	
@@ -257,7 +264,8 @@ int main( int argc, char *argv[] )
         			IO->Reset();
         			mem->Reset();
 #ifdef WITHGUI
-					initgui();
+					if (guidebug)
+						initgui();
 #endif
         			break;
         		case 2:
@@ -300,7 +308,7 @@ int main( int argc, char *argv[] )
 			video_refresh(mem->getRAM());
 			
 #ifdef WITHGUI
-			if (gui_count == 0)
+			if (gui_count == 0 && guidebug == 0x80)
 				refreshgui();
 			gui_count ++;
 			gui_count %= 25;
