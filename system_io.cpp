@@ -260,10 +260,36 @@ void system_io::keyboard_init()
 	shift = 0;
 	altgr = 0;
 	ctrl = 0;
+	pdl0_inc = 0;
+	pdl1_inc = 0;
+	pdl2_inc = 0;
+	pdl3_inc = 0;
 }
 
 int system_io::keyboard()
 {
+	// Handle paddle
+	pdl0 += pdl0_inc;
+	if (pdl0 > _PDL_MAX_uS)
+		pdl0 = _PDL_MAX_uS;
+	if (pdl0 < _PDL_MIN_uS)
+		pdl0 = _PDL_MIN_uS;
+	pdl1 += pdl1_inc;
+	if (pdl1 > _PDL_MAX_uS)
+		pdl1 = _PDL_MAX_uS;
+	if (pdl1 < _PDL_MIN_uS)
+		pdl1 = _PDL_MIN_uS;
+	pdl2 += pdl2_inc;
+	if (pdl2 > _PDL_MAX_uS)
+		pdl2 = _PDL_MAX_uS;
+	if (pdl2 < _PDL_MIN_uS)
+		pdl2 = _PDL_MIN_uS;
+	pdl3 += pdl3_inc;
+	if (pdl3 > _PDL_MAX_uS)
+		pdl3 = _PDL_MAX_uS;
+	if (pdl3 < _PDL_MIN_uS)
+		pdl3 = _PDL_MIN_uS;
+
 	// Get the next event
 	SDL_Event event;
 	if (SDL_PollEvent(&event))
@@ -302,33 +328,25 @@ int system_io::keyboard()
 			else if (tmp == 0x40000061)
 			{
 				// NUM9
-				pdl1 += 30;
-				if (pdl1 > _PDL_MAX_uS)
-					pdl1 = _PDL_MAX_uS;
+				pdl1_inc = -15;
 				return 0;
 			}		
 			else if (tmp == 0x4000005F)
 			{
 				// NUM7
-				pdl0 += 30;
-				if (pdl0 > _PDL_MAX_uS)
-					pdl0 = _PDL_MAX_uS;
+				pdl0_inc= -15;
 				return 0;
 			}		
 			else if (tmp == 0x4000005B)
 			{
 				// NUM3
-				pdl1 -= 30;
-				if (pdl1 < _PDL_MIN_uS)
-					pdl1 = _PDL_MIN_uS;
+				pdl1_inc = 15;
 				return 0;
 			}		
 			else if (tmp == 0x40000059)
 			{
 				// NUM1
-				pdl0 -= 30;
-				if (pdl0 < _PDL_MIN_uS)
-					pdl0 = _PDL_MIN_uS;
+				pdl0_inc = 15;
 				return 0;
 			}		
 			else
@@ -369,6 +387,11 @@ int system_io::keyboard()
 					{
 						// Shell Prompt ALTGR+P
 						return 8;
+					}
+					else if ((tmp & 0xFF) == 0x66)
+					{
+						// Full Screen ALTGR+F
+						return 9;
 					}				
 				}
 				else if (ctrl)
@@ -399,6 +422,30 @@ int system_io::keyboard()
 			else if ((tmp == 0x400000e0) || (tmp == 0x400000e4))
 			{
 				ctrl = 0;
+			}
+			else if (tmp == 0x40000061)
+			{
+				// NUM9
+				pdl1_inc = 0;
+				return 0;
+			}		
+			else if (tmp == 0x4000005F)
+			{
+				// NUM7
+				pdl0_inc= 0;
+				return 0;
+			}		
+			else if (tmp == 0x4000005B)
+			{
+				// NUM3
+				pdl1_inc = 0;
+				return 0;
+			}		
+			else if (tmp == 0x40000059)
+			{
+				// NUM1
+				pdl0_inc = 0;
+				return 0;
 			}
 
 		}

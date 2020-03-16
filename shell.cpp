@@ -183,6 +183,12 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				len = (uint16_t)strtol(operand2, NULL, 10);
 				print_ascii(RAM,address,len);
 			}
+			else if (param == 2)
+			{
+				address = (uint16_t)strtol(operand, NULL, 16);
+				len = 8;
+				print_ascii(RAM,address,len);				
+			}
 		}
 		else if ( (strcmp(cmd,"ph") == 0) || (strcmp(cmd,"PH") == 0) )
 		{
@@ -192,6 +198,12 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				address = (uint16_t)strtol(operand, NULL, 16);
 				len = (uint16_t)strtol(operand2, NULL, 10);
 				print_hex(RAM,address,len);
+			}
+			else if (param == 2)
+			{
+				address = (uint16_t)strtol(operand, NULL, 16);
+				len = 8;
+				print_hex(RAM,address,len);				
 			}
 		}
 		else if ( (strcmp(cmd,"ss") == 0) || (strcmp(cmd,"SS") == 0) )
@@ -267,6 +279,11 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 			{
 				printf("*** Syntax Error\n");
 			}
+		}
+		else if ((strcmp(cmd,"reset") == 0) || (strcmp(cmd,"RESET") == 0))
+		{
+			printf("***** RESET *****\n");
+			cpu->Reset();
 		}
 		else if (param >0)
 		{

@@ -36,6 +36,10 @@ class system_io
 		uint32_t pdl1;
 		uint32_t pdl2;
 		uint32_t pdl3;
+		uint32_t pdl0_inc;
+		uint32_t pdl1_inc;
+		uint32_t pdl2_inc;
+		uint32_t pdl3_inc;
 		uint32_t pdl0_timer;
 		uint32_t pdl1_timer;
 		uint32_t pdl2_timer;

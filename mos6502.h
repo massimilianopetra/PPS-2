@@ -180,6 +180,8 @@ public:
 	uint64_t Run(int32_t cycles,uint64_t& cycleCount,CycleMethod cycleMethod = CYCLE_COUNT);
 	uint16_t Print();
 	uint16_t Dump(uint8_t* _A, uint8_t* _X,uint8_t* _Y,uint8_t* _SP, uint8_t* _P);
+	uint8_t getIllegalOpcode();
+	void resetIllegalOpcode();
 };
 
 #endif

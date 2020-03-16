@@ -64,6 +64,8 @@ int main( int argc, char *argv[] )
 	double deltaTime = 0;
 	FILE *fpcfg = NULL;
 	FILE *fp = NULL;
+	Uint32 flag;
+	uint8_t isFullscreen;
 
  	printf("***** PPS-2 ***** \n\n");
  	
@@ -246,6 +248,29 @@ int main( int argc, char *argv[] )
         
         
         elapsed = cpu->Run(1,cycles);
+        if (cpu->getIllegalOpcode())
+        {
+        	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
+        	
+        	printf("*** ILLEGAL OPCODE %02X at %04X \n",mem->read(pc-1),pc-1);
+        	printf("\n");
+        	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X ",_A,_X,_Y,_SP,_P);
+
+			if (_P & OVERFLOW) printf("O");
+			if (_P & BREAK) printf("B");
+			if (_P & DECIMAL) printf("D");
+			if (_P & INTERRUPT) printf("I");
+			if (_P & ZERO) printf("Z");
+			if (_P & CARRY) printf("C");
+			printf("\n");
+			d6502(pc,1);
+        	printf("\n");
+			IO->diskprint();
+			printf("---------------------------------\n\n");
+			
+			shell_prompt(mem->getRAM(),cpu);	
+		}
+        
         IO->paddle_timer(elapsed);
         IO->diskfetch();
         
@@ -299,6 +324,17 @@ int main( int argc, char *argv[] )
         			// Shell Prompt
         			shell_prompt(mem->getRAM(),cpu);
         			break;
+        		case 9:
+        			// fULL SCREEN
+        			printf("***** SWITCH FULL SCREEN  *****\n");
+        			flag = SDL_WINDOW_FULLSCREEN ;
+    				isFullscreen = SDL_GetWindowFlags(window) & flag;
+					SDL_SetWindowFullscreen(window, isFullscreen ? 0 : flag);
+					SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    				// Get window surface
+            		//screenSurface = SDL_GetWindowSurface(window);
+            		//Main_Renderer =	SDL_CreateSoftwareRenderer(screenSurface);
+    				break;
         			
         		default:
         			// Do nothing

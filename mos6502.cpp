@@ -10,6 +10,7 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	// fill jump table with ILLEGALs
 	instr.addr = &mos6502::Addr_IMP;
 	instr.code = &mos6502::Op_ILLEGAL;
+	instr.cycles = 2;
 
 	for(int i = 0; i < 256; i++)
 	{
@@ -928,8 +929,7 @@ uint64_t mos6502::Run(
 		cycleCountLocal += instr.cycles;
 		
 		cyclesRemaining -=
-			cycleMethod == CYCLE_COUNT        ? instr.cycles
-			/* cycleMethod == INST_COUNT */   : 1;
+		cycleMethod == CYCLE_COUNT        ? instr.cycles : 1;
 	}
 	
 	return cycleCountLocal;
@@ -943,8 +943,26 @@ void mos6502::Exec(Instr i)
 
 void mos6502::Op_ILLEGAL(uint16_t src)
 {
+	uint8_t opcode;
 	illegalOpcode = true;
+	opcode = Read(pc-1);
+	
+	// printf("?????????? ILLEGAL OPCODE %02X at %04X \n",opcode,pc-1);
 }
+
+uint8_t mos6502::getIllegalOpcode()
+{
+	if (illegalOpcode)
+		return 1;
+	else
+		return 0;
+}
+
+void mos6502::resetIllegalOpcode()
+{
+	illegalOpcode = false;
+}
+
 
 
 void mos6502::Op_ADC(uint16_t src)
