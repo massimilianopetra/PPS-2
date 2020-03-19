@@ -59,6 +59,7 @@ class nibbilizer
 		void convert(uint8_t *dsk);
 		int save(char* filename);
 		uint8_t *get_track(uint8_t t);
+		void clear();
 };
 
 #endif

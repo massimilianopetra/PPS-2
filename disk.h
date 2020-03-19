@@ -22,11 +22,12 @@ class drive
 		uint8_t sequencer;
 		uint8_t write_protect;
 		nibbilizer *nib;
+		char filename[256];
 	
 	public:
 		drive(uint8_t num);	
 		void print();
-		int mount(char * filenane);
+		int mount(char * _filenane);
 		void umount();
 		void setmode(int rw);
 		uint8_t getmode();
@@ -38,10 +39,9 @@ class drive
 		uint8_t getpower();
 		uint8_t readwrite();
 		void load(uint8_t data);
-		void savenib(char * filename);
+		void savenib(char * _filename);
 		uint8_t fetch();
 		void debug(uint8_t *_drvnum,uint8_t *_pwr, int8_t *_halftrk, uint16_t *_ptr);
-		
 };
 
 class disk
@@ -49,7 +49,6 @@ class disk
 	private:
 		uint8_t *RAM;
 		uint8_t slot;
-		char filename[256];
 		drive *drv1;
 		drive *drv2;
 		drive *activedrv;

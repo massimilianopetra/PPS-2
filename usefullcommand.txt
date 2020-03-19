@@ -1,0 +1,2 @@
+# Display all character on screen
+HOME : FOR I = 0 TO 7 : VTAB I + 1 : FOR J = 0 TO 31 : POKE PEEK(40) + PEEK(41) * 256 + 4 + J, I * 32 + J : NEXT J, I

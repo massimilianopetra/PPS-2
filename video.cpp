@@ -99,7 +99,7 @@ void video_refresh(uint8_t *RAM)
 					mode = c_val >> 6;
 					
 					// reduce to 5x7 matrix
-					c_val = c_val & 0x3F;
+					//c_val = c_val & 0x3F;
 					
 					char_byte = _CHARROM[c_val*8+(r&0x07)];
 
@@ -174,7 +174,7 @@ void video_refresh(uint8_t *RAM)
 						mode = c_val >> 6;
 						
 						// reduce to 5x7 matrix
-						c_val = c_val & 0x3F;
+						//c_val = c_val & 0x3F;
 						
 						char_byte = _CHARROM[c_val*8+(r&0x07)];
 
@@ -269,7 +269,7 @@ void video_refresh(uint8_t *RAM)
 						mode = c_val >> 6;
 						
 						// reduce to 5x7 matrix
-						c_val = c_val & 0x3F;
+						//c_val = c_val & 0x3F;
 						
 						char_byte = _CHARROM[c_val*8+(r&0x07)];
 
@@ -450,7 +450,7 @@ void video_test()
 			for (cc=0;cc<8;cc++)
 			{
 				c = ((i & 0xf0) >> 1) + cc;
-				printf("%d %d %d\n",i,r,c);
+				//printf("%d %d %d\n",i,r,c);
 				  		
 				if (REVERSE_CHAR_ROM)
 				{

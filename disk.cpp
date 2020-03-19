@@ -44,20 +44,21 @@ drive::drive(uint8_t num)
 	power = 0;
 	drvnum = num;
 	sequencer = 0;
+	strcpy(filename,"");
 	nib = new nibbilizer();
 	track_data = nib->get_track(0);
 }
 
-int drive::mount(char * filename)
+int drive::mount(char * _filename)
 {
 	FILE *fp;
 	
-	printf("Mounting %s on drive %d ...\n",filename,drvnum);
+	printf("Mounting %s on drive %d ...\n",_filename,drvnum);
 	
-	fp=fopen(filename,"rb");
+	fp=fopen(_filename,"rb");
 	if (fp == NULL)
 	{
-		printf("Drive %d: can't open FILE: %s\n",drvnum,filename);
+		printf("Drive %d: EMPTY FILE: %s\n",drvnum,_filename);
 		return -1;
 	}
 		
@@ -74,14 +75,14 @@ int drive::mount(char * filename)
 	
 	mounted = 1;
 	
-	printf("Mount OK\n",drvnum,filename);
+	printf("Mount OK\n",drvnum,_filename);
 	
 	return 0;	
 }
 
-void drive::savenib(char * filename)
+void drive::savenib(char * _filename)
 {
-	nib->save(filename);	
+	nib->save(_filename);	
 }
 
 void drive::stepper(uint8_t p)
@@ -208,7 +209,6 @@ disk::disk(uint8_t *_RAM)
 {
 	RAM = _RAM;
 	slot = 0;
-	strcpy(filename,"");
 	drv1 = new drive(1);
 	drv2 = new drive(2);
 	activedrv = drv1;
@@ -349,24 +349,24 @@ uint8_t disk::getslot()
  	return slot;
 }
 
-int disk::diskmount(char *filename, int drvnum)
+int disk::diskmount(char *_filename, int drvnum)
 {
 	int i;
 	
 	if (drvnum == 1)
-		i = drv1->mount(filename);
+		i = drv1->mount(_filename);
 	else
-		i = drv2->mount(filename);
+		i = drv2->mount(_filename);
 		
 	return i;
 }
 
-void disk::savenib(char * filename,int drvnum)
+void disk::savenib(char * _filename,int drvnum)
 {
 	if (drvnum == 1)
-		drv1->savenib(filename);
+		drv1->savenib(_filename);
 	else
-		drv2->savenib(filename);
+		drv2->savenib(_filename);
 }
 
 void disk::reset()

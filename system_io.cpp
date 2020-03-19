@@ -264,8 +264,56 @@ void system_io::keyboard_init()
 	pdl1_inc = 0;
 	pdl2_inc = 0;
 	pdl3_inc = 0;
+	pb0 = 0;
+	pb1 = 0;
+	pb2 = 0;
 }
 
+uint8_t system_io::readPB0()
+{
+	return pb0;
+}
+
+uint8_t system_io::readPB1()
+{
+	return pb1;
+}
+
+uint8_t system_io::readPB2()
+{
+	return pb2;
+}
+
+void system_io::resetPB0()
+{
+	pb0 = 0;
+}
+
+void system_io::resetPB1()
+{
+	pb1 = 0;	
+}
+
+void system_io::resetPB2()
+{
+	pb2 = 0;	
+}
+
+void system_io::setPB0()
+{
+	pb0 = 0x80;
+}
+
+void system_io::setPB1()
+{
+	pb1 = 0x80;	
+}
+
+void system_io::setPB2()
+{
+	pb2 = 0x80;	
+}
+		
 int system_io::keyboard()
 {
 	// Handle paddle
@@ -303,6 +351,8 @@ int system_io::keyboard()
 			{	
 				// Shift pressed
 				shift = 1;
+				setPB2();
+				
 			}
 			else if ((tmp == 0x400000e6))
 			{	
@@ -328,27 +378,39 @@ int system_io::keyboard()
 			else if (tmp == 0x40000061)
 			{
 				// NUM9
-				pdl1_inc = -15;
+				pdl1_inc = -_PDL_INC;
 				return 0;
 			}		
 			else if (tmp == 0x4000005F)
 			{
 				// NUM7
-				pdl0_inc= -15;
+				pdl0_inc= -_PDL_INC;
 				return 0;
 			}		
 			else if (tmp == 0x4000005B)
 			{
 				// NUM3
-				pdl1_inc = 15;
+				pdl1_inc = _PDL_INC;
 				return 0;
 			}		
 			else if (tmp == 0x40000059)
 			{
 				// NUM1
-				pdl0_inc = 15;
+				pdl0_inc = _PDL_INC;
 				return 0;
-			}		
+			}
+			else if (tmp == 0x4000005c)
+			{
+				// NUM4
+				setPB0();
+				return 0;
+			}	
+			else if (tmp == 0x4000005e)
+			{
+				// NUM6
+				setPB1();
+				return 0;
+			}	
 			else
 			{
 				if (altgr)
@@ -413,6 +475,7 @@ int system_io::keyboard()
 			{	
 				// Shift release
 				shift = 0;
+				resetPB2();
 			}
 			else if ((tmp == 0x400000e6))
 			{	
@@ -445,6 +508,18 @@ int system_io::keyboard()
 			{
 				// NUM1
 				pdl0_inc = 0;
+				return 0;
+			}
+			else if (tmp == 0x4000005c)
+			{
+				// NUM4
+				resetPB0();
+				return 0;
+			}	
+			else if (tmp == 0x4000005e)
+			{
+				// NUM6
+				resetPB1();
 				return 0;
 			}
 

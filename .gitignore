@@ -23,4 +23,7 @@ dsk
 rom
 software
 
+# Gif Help Pictures
+*.gif
+
 

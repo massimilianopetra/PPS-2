@@ -47,6 +47,16 @@ nibbilizer::nibbilizer()
     memset(nib_sector.gap2,GAP_BYTE,GAP2_LEN);
 }
 
+void nibbilizer::clear()
+{
+	int i;
+	
+    for (i = 0; i < NUM_TRACKS; i++)
+    {
+    	memset(track_buffer[i],0,BYTES_PER_NIB_TRACK);
+	}	
+}
+
 void nibbilizer::convert(uint8_t *dsk)
 {
 	uint8_t t,s;

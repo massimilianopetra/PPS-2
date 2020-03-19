@@ -23,6 +23,16 @@ drawchar(int x,int y,uint8_t c, uint8_t r, uint8_t g, uint8_t b,uint8_t big)
 	
 	SDL_SetRenderDrawColor(Main_Renderer, r, g, b, 255);
 	
+	// ASCII Translation
+	if (c >= '@')
+	{
+		c = c - '@';
+	}
+	else
+	{
+		c = c - ' '+32;
+	}
+	
 	for (i=0;i<8;i++)
 	{
 		char_byte = _CHARROM[c*8+i] & 0b01111110;
@@ -74,7 +84,7 @@ drawstring(int x,int y,char *s, uint8_t r, uint8_t g, uint8_t b,uint8_t big)
 
 	while(s[i] != '\0')
 	{
-		drawchar(x,y,s[i]-64,r,g,b,big);
+		drawchar(x,y,s[i],r,g,b,big);
 		if (big)
 			x += 16;
 		else
@@ -148,6 +158,10 @@ void initgui()
 	// HRAM
 	
 	drawstring(HRAMSTARTX-2,HRAMSTARTY-21,"HRAM",0,0,0,1);
+	drawchar(HRAMSTARTX+5,HRAMSTARTY+10,'R',0,0,0,0);
+	drawchar(HRAMSTARTX+18,HRAMSTARTY+10,'W',0,0,0,0);
+	drawchar(HRAMSTARTX+31,HRAMSTARTY+10,'1',0,0,0,0);
+	drawchar(HRAMSTARTX+44,HRAMSTARTY+10,'2',0,0,0,0);
 	
 	rect.x = HRAMSTARTX;
 	rect.y = HRAMSTARTY;

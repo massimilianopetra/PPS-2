@@ -76,7 +76,7 @@ uint8_t memory::read(uint16_t address)
 {
 	uint8_t value = 0;
 	
-	// BANK1 Switch
+	/********** BANK1 SOFT SWITCHES **********/
 	if (address >=0xC080 &&  address <=0xC087) 
 	{ 
 		BANK1 = 0;
@@ -86,7 +86,7 @@ uint8_t memory::read(uint16_t address)
 		BANK1 = 1;
 	}
 	
-	// HRAMRD Switch
+	/********** HRAMRD SOFT HANDLER **********/
 	switch(address)
 	{
 		case 0xC080:
@@ -112,6 +112,7 @@ uint8_t memory::read(uint16_t address)
 			break;					
 	}
 	
+	/********** I/O SOFT SWITCHES **********/
 	if (address == _KBD) 
 	{ 
 		value = _RAM[_KBD];
@@ -124,35 +125,51 @@ uint8_t memory::read(uint16_t address)
 	{
 		IO->sound();
 	}
-	else if ((address & 0xFFF0) == _PDL_TRIGGER)
+	else if ((address & 0xFFF0) == _TIMER_TRIGGER)
 	{
 		IO->paddle_trigger();
 	}
-	else if (address == _PDL0)
+	else if (address == _PDL0 || address == _PDL0+8) 
 	{
 		value = IO->readPDL0();
 	}
-	else if (address == _PDL1)
+	else if (address == _PDL1 || address == _PDL1+8)
 	{
 		value = IO->readPDL1();
 	}
-	else if (address == _PDL2)
+	else if (address == _PDL2 || address == _PDL2+8)
 	{
 		value = IO->readPDL3();
 	}
-	else if (address == _PDL3)
+	else if (address == _PDL3 || address == _PDL3+8)
 	{
 		value = IO->readPDL3();
 	}
+	else if (address == _PB0 || address == _PB0+8)
+	{
+		value = IO->readPB0();
+	}
+	else if (address == _PB1 || address == _PB1+8)
+	{
+		value = IO->readPB1();
+	}
+	else if (address == _PB2 || address == _PB2+8)
+	{
+		value = IO->readPB2();
+	}	
 	else if (address == INTCXROM_READ)
 	{
 		value = INTCXROM;
 	}
+	
+	/********** DEVICE SLOT SOFT SWITCHES **********/
 	else if (address >= 0xC090 && address <= 0xC0FF) 
 	{
 		// Handle devices
 		value = IO->devicectrl(address,_READ,0x00);
 	}
+	
+	/********** VIDEO SOFT SWITCHES **********/
 	else if (address == _GRPHICS_MODE)
 	{
 		screen_switches |= _TEXT_GRAPHICS;
@@ -185,9 +202,10 @@ uint8_t memory::read(uint16_t address)
 	{
 		screen_switches &= ~ _LORES_HIRES;
 	}
+	
+	/********** ROM HANDLER **********/
 	else if (address > 0xCFFF)
 	{
-		// Read ROM
 		if (HRAMRD)
 		{
 			if (BANK1 == 1 && address < 0xE000)
@@ -202,9 +220,10 @@ uint8_t memory::read(uint16_t address)
 		else
 			value = _ROM[address];
 	}
+	
+	/********** READ RAM **********/
   	else
   	{
-  		// read RAM
   		value = _RAM[address];	
 	}
 	
@@ -214,7 +233,7 @@ uint8_t memory::read(uint16_t address)
 void memory::write(uint16_t address,uint8_t value)
 {
 
-	// BANK1 Switch
+	/********** BANK1 SOFT SWITCHES **********/
 	if (address >=0xC080 &&  address <=0xC087) 
 	{ 
 		BANK1 = 0;
@@ -224,7 +243,7 @@ void memory::write(uint16_t address,uint8_t value)
 		BANK1 = 1;
 	}
 	
-	// HRAMRD Switch
+	/********** HRAMRD SOFT HANDLER **********/
 	switch(address)
 	{
 		case 0xC080:
@@ -250,6 +269,7 @@ void memory::write(uint16_t address,uint8_t value)
 			break;					
 	}
 	
+	/********** I/O SOFT SWITCHES **********/
 	if (address == _KBDCR)
 	{
 		_RAM[_KBD] = _RAM[_KBD] & 0x7f;
@@ -258,7 +278,7 @@ void memory::write(uint16_t address,uint8_t value)
 	{
 		IO->sound();	
 	}
-	else if ((address & 0xFFF0) == _PDL_TRIGGER)
+	else if ((address & 0xFFF0) == _TIMER_TRIGGER)
 	{
 		IO->paddle_trigger();
 	}
@@ -270,11 +290,15 @@ void memory::write(uint16_t address,uint8_t value)
 	{
 		INTCXROM = 0x80;
 	}
+	
+	/********** DEVICE SLOT SOFT SWITCHES **********/
 	else if (address >= 0xC080 && address <= 0xC0FF) 
 	{
 		// Handle devices
 		IO->devicectrl(address,_WRITE,value);
 	}
+	
+	/********** VIDEO SOFT SWITCHES **********/
 	else if (address == _GRPHICS_MODE)
 	{
 		screen_switches |= _TEXT_GRAPHICS;
@@ -307,6 +331,8 @@ void memory::write(uint16_t address,uint8_t value)
 	{
 		screen_switches &= ~ _LORES_HIRES;
 	}
+	
+	/********** WRITE RAM **********/
 	else
 	{
 		// Write value in RAM/HRAM  (DON'T WRITE ON PERIPHERAL ROM)

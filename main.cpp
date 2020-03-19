@@ -117,6 +117,18 @@ int main( int argc, char *argv[] )
 					}
 				}
 			}
+			else if (strcmp(cmd,"CHARGEN") == 0)
+			{
+				i = sscanf(line,"%s %s",cmd,filename);	
+				if (i == 2)
+				{
+					i = mem->loadCHARROM(filename);
+					if (i == 0)
+						printf("loaded character generator %s \n",filename);
+					else
+						printf("ERROR loading character generator %s [%d]\n",filename,i);
+				}
+			}
 			else if (strcmp(cmd,"SLOT") == 0)
 			{
 				i = sscanf(line,"%s %s %s",cmd,p1,peripheral);	
@@ -211,6 +223,7 @@ int main( int argc, char *argv[] )
 	{
 		NOW = SDL_GetPerformanceCounter();	
         
+        /***** DEBUG MODE *****/
         if (debug_mode)
         {
         	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
@@ -246,7 +259,7 @@ int main( int argc, char *argv[] )
 			}	
 		}
         
-        
+        /***** CPU CYCLE *****/
         elapsed = cpu->Run(1,cycles);
         if (cpu->getIllegalOpcode())
         {
@@ -271,12 +284,15 @@ int main( int argc, char *argv[] )
 			shell_prompt(mem->getRAM(),cpu);	
 		}
         
+        /***** TIMER *****/
         IO->paddle_timer(elapsed);
+        
+        /***** DISK I/O *****/
         IO->diskfetch();
         
         io_count += elapsed;
         
-        // Update I/O 50Hz
+        /***** I/O and VIDEO 50Hz *****/
         if (io_count > (XTAL/50))
         {
         	switch(IO->keyboard())
