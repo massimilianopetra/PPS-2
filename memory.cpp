@@ -42,6 +42,11 @@ uint8_t* memory::getRAM()
 	return _RAM;
 }
 
+uint8_t* memory::getROM()
+{
+	return _ROM;
+}
+
 uint8_t memory::getBANK1()
 {
 	return BANK1;
@@ -204,7 +209,11 @@ uint8_t memory::read(uint16_t address)
 	}
 	
 	/********** ROM HANDLER **********/
-	else if (address > 0xCFFF)
+	else if (address >= 0xC100 && address < 0xD000)
+	{
+		value = _ROM[address];
+	}
+	else if (address >= 0xD000)
 	{
 		if (HRAMRD)
 		{

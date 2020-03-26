@@ -46,6 +46,7 @@ class memory
 		void write(uint16_t address,uint8_t value);
 		void Reset();
 		uint8_t* getRAM();
+		uint8_t* getROM();
 		int loadROM(uint16_t startAddress, uint16_t len, char *filename);
 		int loadROM(uint16_t startAddress, char *filename);
 		int loadCHARROM(char* filename);

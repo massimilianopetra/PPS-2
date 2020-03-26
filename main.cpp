@@ -87,7 +87,7 @@ int main( int argc, char *argv[] )
 	printf("init OK\n");
 	
 	printf("I/O   init ...  \n");
-	IO = new system_io(mem->getRAM());
+	IO = new system_io();
 	printf("init OK\n");
 			
 	// Load config file
@@ -109,7 +109,7 @@ int main( int argc, char *argv[] )
 				if (i == 3)
 				{
 					start_address = strtoul (p1, NULL, 16);
-					if (start_address >= 0xC100)
+					if (start_address >= 0xC000)
 					{
 						i = mem->loadROM(start_address,filename);
 						if (i > 0)
@@ -281,7 +281,7 @@ int main( int argc, char *argv[] )
 			IO->diskprint();
 			printf("---------------------------------\n\n");
 			
-			shell_prompt(mem->getRAM(),cpu);	
+			shell_prompt(mem->getRAM(),mem->getROM(),cpu);	
 		}
         
         /***** TIMER *****/
@@ -338,7 +338,7 @@ int main( int argc, char *argv[] )
         			break;
         		case 8:
         			// Shell Prompt
-        			shell_prompt(mem->getRAM(),cpu);
+        			shell_prompt(mem->getRAM(),mem->getROM(),cpu);
         			break;
         		case 9:
         			// fULL SCREEN
@@ -351,7 +351,22 @@ int main( int argc, char *argv[] )
             		//screenSurface = SDL_GetWindowSurface(window);
             		//Main_Renderer =	SDL_CreateSoftwareRenderer(screenSurface);
     				break;
-        			
+        		case 11:
+        			// Save NIB
+        			if (shell_query("Save NIB y/n ? "))
+					{
+						IO->disksavenib();
+						printf("NIB save OK\n");
+					}
+        			break;
+        		case 12:
+        			// Save DSK
+        			if (shell_query("Save DSK y/n ? "))
+        			{
+        				IO->disksavedsk();
+        				printf("DSK save OK\n");
+					}
+        			break;
         		default:
         			// Do nothing
         			break;

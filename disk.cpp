@@ -52,13 +52,17 @@ drive::drive(uint8_t num)
 int drive::mount(char * _filename)
 {
 	FILE *fp;
+	char *last=NULL;
 	
 	printf("Mounting %s on drive %d ...\n",_filename,drvnum);
+	last = strrchr(_filename,'.');
+	
 	
 	fp=fopen(_filename,"rb");
 	if (fp == NULL)
 	{
-		printf("Drive %d: EMPTY FILE: %s\n",drvnum,_filename);
+		printf("Drive %d: EMPTY FILE %s\n",drvnum,_filename);
+		nib->clear();
 		return -1;
 	}
 		
@@ -71,18 +75,59 @@ int drive::mount(char * _filename)
 	fclose(fp);
 	
 	// Nibbilize disk image
-	nib->convert(image);
+	nib->convert(image,0);
 	
 	mounted = 1;
 	
 	printf("Mount OK\n",drvnum,_filename);
 	
+	// Store filename without extension
+	if (last != NULL)
+	{
+		*last='\0';
+		strcpy(filename,_filename);
+	}
+	
 	return 0;	
+}
+
+void drive::savenib()
+{
+	char _filename[256];
+	sprintf(_filename,"%s.nib",filename);
+	savenib(_filename);	
 }
 
 void drive::savenib(char * _filename)
 {
 	nib->save(_filename);	
+}
+
+void drive::savedsk()
+{
+	char _filename[256];
+	sprintf(_filename,"%s.dsk",filename);
+	savedsk(_filename);	
+}
+
+void drive::savedsk(char * _filename)
+{
+	FILE *fp;
+	
+	fp=fopen(_filename,"wb");
+	if (fp == NULL)
+	{
+		printf("Drive %d: SAVE DSK ERROR OPEN %s\n",drvnum,_filename);
+		return;
+	}
+		
+	if (fwrite(image,1,DISK_SIZE,fp) != DISK_SIZE)
+	{
+		printf("Drive %d: SAVE DSK ERROR WRITE %s\n",drvnum,_filename);
+		return;		 
+	}
+		
+	fclose(fp);	
 }
 
 void drive::stepper(uint8_t p)
@@ -205,9 +250,9 @@ void drive::load(uint8_t data)
 	;	
 }
 
-disk::disk(uint8_t *_RAM)
+disk::disk(uint8_t *_ROM)
 {
-	RAM = _RAM;
+	ROM = _ROM;
 	slot = 0;
 	drv1 = new drive(1);
 	drv2 = new drive(2);
@@ -224,10 +269,10 @@ void disk::init(uint8_t _slot)
 	
 	for(i = 0; i < 0xFF; i++)
 	{
-		RAM[start_address+i]=_DISK_P5A[i];
+		ROM[start_address+i]=_DISK_P5A[i];
 	}
 	
-	printf("DISK II installed at %04X \n",start_address);
+	printf("DISK II installed at ROM %04X \n",start_address);
 }
 
 void disk::print()
@@ -361,12 +406,30 @@ int disk::diskmount(char *_filename, int drvnum)
 	return i;
 }
 
+void disk::savenib()
+{
+	activedrv->savenib();	
+}
+
 void disk::savenib(char * _filename,int drvnum)
 {
 	if (drvnum == 1)
 		drv1->savenib(_filename);
 	else
 		drv2->savenib(_filename);
+}
+
+void disk::savedsk()
+{
+	activedrv->savedsk();
+}
+
+void disk::savedsk(char * _filename,int drvnum)
+{
+	if (drvnum == 1)
+		drv1->savedsk(_filename);
+	else
+		drv2->savedsk(_filename);
 }
 
 void disk::reset()

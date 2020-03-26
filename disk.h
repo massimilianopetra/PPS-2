@@ -39,7 +39,10 @@ class drive
 		uint8_t getpower();
 		uint8_t readwrite();
 		void load(uint8_t data);
+		void savenib();
 		void savenib(char * _filename);
+		void savedsk();
+		void savedsk(char * _filename);
 		uint8_t fetch();
 		void debug(uint8_t *_drvnum,uint8_t *_pwr, int8_t *_halftrk, uint16_t *_ptr);
 };
@@ -47,7 +50,7 @@ class drive
 class disk
 {
 	private:
-		uint8_t *RAM;
+		uint8_t *ROM;
 		uint8_t slot;
 		drive *drv1;
 		drive *drv2;
@@ -55,13 +58,16 @@ class disk
 		uint8_t data_register;
 		
 	public:
-		disk(uint8_t *_RAM);
+		disk(uint8_t *_ROM);
 		void init(uint8_t _slot);
 		uint8_t controller(uint8_t n, uint8_t on, uint8_t rw,uint8_t data);
 		uint8_t getslot();
 		int diskmount(char *filename, int drvnum);
 		void reset();
+		void savenib();
 		void savenib(char * filename,int drvnum);
+		void savedsk();
+		void savedsk(char * filename,int drvnum);
 		void fetch();
 		void print();
 		void debug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);

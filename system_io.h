@@ -2,6 +2,7 @@
 #define __SYSTEM_IO_H
 
 #include <stdint.h>
+#include "memory.h"
 #include "disk.h"
 
 // **************** MEMORY **********************
@@ -34,6 +35,7 @@ class system_io
 	private:
 		uint8_t * _RAM;
 		
+		uint8_t showkbdcode;
 		uint8_t shift;
 		uint8_t altgr;
 		uint8_t ctrl;
@@ -58,7 +60,7 @@ class system_io
 		disk *dsk;
 		
 	public:
-		system_io(uint8_t *RAM);
+		system_io();
 		int keyboard();
 		void keyboard_init();
 		void sound();
@@ -83,6 +85,8 @@ class system_io
 		void diskslot(uint8_t i);
 		int diskmount(char *filename, int drvnum);
 		void disksavenib(char *filename, int drvnum);
+		void disksavenib();
+		void disksavedsk();
 		void diskfetch();
 		void diskprint();
 		void diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);

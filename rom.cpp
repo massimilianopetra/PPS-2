@@ -9,6 +9,7 @@ uint8_t _CHARROM[2048];
 ROM::ROM(uint8_t *_MEMORY)
 {
 	MEMORY = _MEMORY;	
+	
 }
 
 int ROM::loadROM(uint16_t startAddress, uint16_t len, char *filename)
@@ -30,13 +31,20 @@ int ROM::loadROM(uint16_t startAddress, char *filename)
 {
 	FILE *fp=NULL;
 	int i=0;
+	uint8_t b;
 	
 	fp=fopen(filename,"rb");
 	if (fp == NULL)
 		return -1;
 	
-	while(fread(&(MEMORY[startAddress+i]),1,1,fp) == 1) 
-		i++;		 
+	while(fread(&b,1,1,fp) == 1) 
+	{
+		if (startAddress+i >= 0xc100)
+			MEMORY[startAddress+i]=b;
+		i++;
+	}
+	
+				 
 		
 	fclose(fp);
 	return i;	

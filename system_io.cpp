@@ -129,12 +129,13 @@ uint8_t mask_off[] = {
 
 system_io *IO = NULL;
 
-system_io::system_io(uint8_t *RAM)
+system_io::system_io()
 {
-	_RAM = RAM;
+	_RAM = mem->getRAM();
 	keyboard_init();
 	paddle_init();
-	dsk = new disk(RAM);
+	dsk = new disk(mem->getROM());
+	showkbdcode = 0;
 }
 
 void system_io::paddle_init()
@@ -345,7 +346,8 @@ int system_io::keyboard()
 		if (event.type == SDL_KEYDOWN)
 		{
 			int tmp = event.key.keysym.sym;
-			//printf("DBD: (P) %02x\n", tmp);
+			if (showkbdcode)
+				printf("DBD: (P) %02x\n", tmp);
 			
 			if ((tmp == 0x400000e1) || (tmp == 0x400000e5))
 			{	
@@ -410,6 +412,23 @@ int system_io::keyboard()
 				// NUM6
 				setPB1();
 				return 0;
+			}
+			else if (tmp == 0x4000003A)
+			{
+				// F1
+				return 11;
+			}
+			else if (tmp == 0x4000003B)
+			{
+				// F2
+				return 12;
+			}	
+			else if (tmp == 0x4000003C)
+			{
+				// F3
+				showkbdcode ^= 1;
+				printf("=== TOGGLE SHOW KBD CODE ===\n");
+				return 0;
 			}	
 			else
 			{
@@ -469,7 +488,8 @@ int system_io::keyboard()
 		else if (event.type == SDL_KEYUP)
 		{
 			int tmp = event.key.keysym.sym;
-			//printf("KBD: (R) %02x\n", tmp);
+			if (showkbdcode)
+				printf("DBD: (R) %02x\n", tmp);
 			
 			if ((tmp == 0x400000e1) || (tmp == 0x400000e5))
 			{	
@@ -551,6 +571,16 @@ int system_io::diskmount(char *filename, int drvnum)
 void system_io::disksavenib(char *filename, int drvnum)
 {
 	dsk->savenib(filename,drvnum);
+}
+
+void system_io::disksavenib()
+{
+	dsk->savenib();
+}
+
+void system_io::disksavedsk()
+{
+	dsk->savedsk();
 }
 
 void system_io::sound()

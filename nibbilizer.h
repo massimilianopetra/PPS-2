@@ -56,7 +56,7 @@ class nibbilizer
 		
 	public:
 		nibbilizer();
-		void convert(uint8_t *dsk);
+		void convert(uint8_t *dsk, uint8_t interleave);
 		int save(char* filename);
 		uint8_t *get_track(uint8_t t);
 		void clear();

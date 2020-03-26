@@ -22,6 +22,25 @@ extern int32_t xtal;
 
 uint16_t __last_address = 0;
 
+uint8_t shell_query(char *prompt)
+{
+	char answer[256];
+	uint8_t query = 0;
+	
+	printf("%s",prompt);
+	scanf("%s",answer);
+	
+	if (strcmp(answer,"y")==0)
+		query = 1;
+	else if (strcmp(answer,"Y")==0)
+		query = 1;		
+	else if (strcmp(answer,"yes")==0)
+		query = 1;		
+	else if (strcmp(answer,"YES")==0)
+		query = 1;		
+
+	return query;
+}
 void paste(uint8_t *RAM,mos6502 *cpu)
 {
 	SDL_Event event;
@@ -119,7 +138,7 @@ void print_ascii(uint8_t *RAM, uint16_t address, uint16_t length)
 	printf("\n");
 }
 
-void print_hex(uint8_t *RAM, uint16_t address, uint16_t length)
+void print_hex(uint8_t *m, uint16_t address, uint16_t length)
 {
 	int i;
 	int k=0;
@@ -129,12 +148,12 @@ void print_hex(uint8_t *RAM, uint16_t address, uint16_t length)
 		if ((i % 8) == 0)
 			printf("\n%04X: ",address+i);
 			
-		printf("%02X ",RAM[address+i]);
+		printf("%02X ",m[address+i]);
 	}	
 	printf("\n");
 }
 
-void shell_prompt(uint8_t *RAM,mos6502 *cpu)
+void shell_prompt(uint8_t *RAM,uint8_t *ROM,mos6502 *cpu)
 {
 	char line[256];
 	char cmd[32];
@@ -190,7 +209,7 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				print_ascii(RAM,address,len);				
 			}
 		}
-		else if ( (strcmp(cmd,"ph") == 0) || (strcmp(cmd,"PH") == 0) )
+		else if ( (strcmp(cmd,"phram") == 0) || (strcmp(cmd,"PHRAM") == 0) )
 		{
 			// Print Hex
 			if (param == 3)
@@ -204,6 +223,22 @@ void shell_prompt(uint8_t *RAM,mos6502 *cpu)
 				address = (uint16_t)strtol(operand, NULL, 16);
 				len = 8;
 				print_hex(RAM,address,len);				
+			}
+		}
+		else if ( (strcmp(cmd,"phrom") == 0) || (strcmp(cmd,"PHROM") == 0) )
+		{
+			// Print Hex
+			if (param == 3)
+			{
+				address = (uint16_t)strtol(operand, NULL, 16);
+				len = (uint16_t)strtol(operand2, NULL, 10);
+				print_hex(ROM,address,len);
+			}
+			else if (param == 2)
+			{
+				address = (uint16_t)strtol(operand, NULL, 16);
+				len = 8;
+				print_hex(ROM,address,len);				
 			}
 		}
 		else if ( (strcmp(cmd,"ss") == 0) || (strcmp(cmd,"SS") == 0) )

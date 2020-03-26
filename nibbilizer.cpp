@@ -18,9 +18,15 @@ uint8_t translate_table[] = {
     0XF7, 0XF9, 0XFA, 0XFB, 0XFC, 0XFD, 0XFE, 0XFF
 };
 
-uint8_t soft_interleave[] = {0X0, 0X7, 0xE, 0X6, 0xD, 0X5, 0xC, 0X4, 0xB, 0X3, 0xA, 0X2, 0X9, 0X1, 0X8, 0xF};
+// .dsk .do sectors interleave
+uint8_t do_interleave[] =  {0X0, 0X7, 0xE, 0X6, 0xD, 0X5, 0xC, 0X4, 0xB, 0X3, 0xA, 0X2, 0X9, 0X1, 0X8, 0xF};
 
-uint8_t phys_interleave[] = {0X0, 0xD, 0xB, 0x9, 0x7, 0x5, 0x3, 0x1, 0xE, 0xC, 0xA, 0x8, 0x6, 0x4, 0x2, 0xF};
+// .po sectors interleave
+uint8_t po_interleave[] =  {0X0, 0X8, 0x1, 0X9, 0x2, 0XA, 0x3, 0XB, 0x4, 0XC, 0x5, 0XD, 0X6, 0XE, 0X7, 0xF};
+
+// uint8_t phys_interleave[] = {0X0, 0xD, 0xB, 0x9, 0x7, 0x5, 0x3, 0x1, 0xE, 0xC, 0xA, 0x8, 0x6, 0x4, 0x2, 0xF};
+
+uint8_t phys_interleave[] = {0X0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF};
 
 nibbilizer::nibbilizer()
 {
@@ -35,6 +41,9 @@ nibbilizer::nibbilizer()
         	exit(-1);
 		}
 	}
+	
+	// CLEAR NIB SECTOR
+	clear();
 	
 	// SETUP NIB SECTOR
 	memcpy(nib_sector.addr.prologue,addr_prologue,3);
@@ -53,25 +62,29 @@ void nibbilizer::clear()
 	
     for (i = 0; i < NUM_TRACKS; i++)
     {
-    	memset(track_buffer[i],0,BYTES_PER_NIB_TRACK);
+    	memset(track_buffer[i],GAP_BYTE,BYTES_PER_NIB_TRACK);
 	}	
 }
 
-void nibbilizer::convert(uint8_t *dsk)
+void nibbilizer::convert(uint8_t *dsk, uint8_t interleave)
 {
 	uint8_t t,s;
 	uint8_t checksum;
+	int softsec;
+	int physsec;
 	
 	for (t=0;t<NUM_TRACKS;t++)
 	{
 		for(s=0;s<NUM_SECTORS;s++)
 		{
 
-			
-			
-            int softsec = soft_interleave[s];
-            int physsec = phys_interleave[s];
-            //printf("(%d-%d-%d-%d)\n",t,s,softsec,physsec);
+			// Sectors Interleave
+			if (interleave == 1)
+				softsec = po_interleave[s];
+			else
+            	softsec = do_interleave[s];
+            	
+            physsec = phys_interleave[s];
             
 			// Setup address field
             odd_even_encode(t,nib_sector.addr.track);
