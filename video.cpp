@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "video.h"
 #include "gui.h"
-#include "rom.h"
+#include "memory.h"
 
 // Gui debug
 extern uint8_t guidebug;

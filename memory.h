@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include "system_io.h"
-#include "rom.h"
 
 #define _READ  0
 #define _WRITE 1
@@ -24,21 +23,24 @@
 uint8_t busreader(uint16_t address);
 void buswriter(uint16_t address,uint8_t value);
 
+extern uint8_t _CHARROM[2048];
+
 class memory
 {
 	private:
+		// Memory spaces
 		uint8_t _RAM[0x10000];
 		uint8_t _RAM_BANK1[0x1000];
 		uint8_t _ROM[0x10000];
 		
+		// Soft switches
 		uint8_t INTCXROM;
+		uint8_t INTC8ROM;
 		uint8_t SLOTC3ROM;
 		uint8_t BANK1;
 		uint8_t HRAMRD;
 		uint8_t HRAMWRT;
 		uint8_t PREWRITE;
-		
-		ROM *rom;
 		
 	public:
 		memory();
@@ -47,6 +49,10 @@ class memory
 		void Reset();
 		uint8_t* getRAM();
 		uint8_t* getROM();
+		uint8_t readRAM(uint16_t address);
+		uint8_t readROM(uint16_t address);
+		void writeRAM(uint16_t address,uint8_t value);
+		void writeROM(uint16_t address,uint8_t value);		
 		int loadROM(uint16_t startAddress, uint16_t len, char *filename);
 		int loadROM(uint16_t startAddress, char *filename);
 		int loadCHARROM(char* filename);

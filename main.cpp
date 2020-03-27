@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <conio.h>
 
-#include "rom.h"
 #include "mos6502.h"
 #include "system_io.h"
 #include "video.h"

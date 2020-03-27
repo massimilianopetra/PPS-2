@@ -19,17 +19,19 @@ void buswriter(uint16_t address,uint8_t value)
 
 /****************************************************************/
 
+uint8_t _CHARROM[2048];
+
 memory *mem = NULL;
 
 memory::memory()
 {
-	rom = new ROM(_ROM);
 	Reset();
 }
 
 void memory::Reset()
 {
 	INTCXROM = 0;
+	INTC8ROM = 0;
     SLOTC3ROM = 0;
     BANK1 = 0;
     HRAMRD = 0;
@@ -46,6 +48,38 @@ uint8_t* memory::getROM()
 {
 	return _ROM;
 }
+
+uint8_t memory::readRAM(uint16_t address)
+{
+	uint8_t value = 0x00;
+	
+	if (address < 0x10000)
+		value = _RAM[address];
+		
+	return value;
+}
+
+uint8_t memory::readROM(uint16_t address)
+{
+	uint8_t value = 0x00;
+	
+	if (address < 0x10000)
+		value = _ROM[address];
+		
+	return value;	
+}
+
+void memory::writeRAM(uint16_t address,uint8_t value)
+{
+	if (address < 0x10000)
+		_RAM[address]=value;
+}
+
+void memory::writeROM(uint16_t address,uint8_t value)
+{
+	if (address < 0x10000)
+		_ROM[address]=value;	
+}		
 
 uint8_t memory::getBANK1()
 {
@@ -64,17 +98,62 @@ uint8_t memory::getHRAMWRT()
 
 int memory::loadROM(uint16_t startAddress, uint16_t len, char *filename)
 {
-	return rom->loadROM(startAddress,len,filename);
+	FILE *fp=NULL;
+	int i=0;
+	uint8_t b;
+	
+	fp=fopen(filename,"rb");
+	if (fp == NULL)
+		return -1;
+
+	while((fread(&b,1,1,fp) == 1) && (i<len)) 
+	{
+		if (startAddress+i >= 0xc100)
+			writeROM(startAddress+i,b);
+		i++;
+	}
+
+	if (i != len)
+		return -2;
+		
+	fclose(fp);
+	return i;	
 }
 
 int memory::loadROM(uint16_t startAddress, char *filename)
 {
-	return rom->loadROM(startAddress,filename);	
+	FILE *fp=NULL;
+	int i=0;
+	uint8_t b;
+	
+	fp=fopen(filename,"rb");
+	if (fp == NULL)
+		return -1;
+	
+	while(fread(&b,1,1,fp) == 1) 
+	{
+		if (startAddress+i >= 0xc100)
+			writeROM(startAddress+i,b);
+		i++;
+	}
+			
+	fclose(fp);
+	return i;	
 }
 
 int memory::loadCHARROM(char* filename)
 {
-	return rom->loadCHARROM(filename);
+	FILE *fp=NULL;
+	int i;
+	
+	fp=fopen(filename,"rb");
+	if (fp == NULL)
+		return -1;
+	i = fread(_CHARROM,1,2048,fp); 
+	if (i != 2048)
+		return -2;
+	fclose(fp);
+	return 0;
 }
 
 uint8_t memory::read(uint16_t address)

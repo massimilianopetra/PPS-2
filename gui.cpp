@@ -4,7 +4,6 @@
 #include "gui.h"
 #include "system_io.h"
 #include "memory.h"
-#include "rom.h"
 
 
 #define DRV1STARTX  10
