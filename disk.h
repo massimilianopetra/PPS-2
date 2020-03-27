@@ -50,7 +50,6 @@ class drive
 class disk
 {
 	private:
-		uint8_t *ROM;
 		uint8_t slot;
 		drive *drv1;
 		drive *drv2;
@@ -58,7 +57,7 @@ class disk
 		uint8_t data_register;
 		
 	public:
-		disk(uint8_t *_ROM);
+		disk();
 		void init(uint8_t _slot);
 		uint8_t controller(uint8_t n, uint8_t on, uint8_t rw,uint8_t data);
 		uint8_t getslot();

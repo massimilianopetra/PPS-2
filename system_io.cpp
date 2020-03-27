@@ -134,7 +134,7 @@ system_io::system_io()
 	_RAM = mem->getRAM();
 	keyboard_init();
 	paddle_init();
-	dsk = new disk(mem->getROM());
+	dsk = new disk();
 	showkbdcode = 0;
 }
 

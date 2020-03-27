@@ -25,6 +25,10 @@ memory *mem = NULL;
 
 memory::memory()
 {
+	memset(_RAM,0x00,0x10000);
+	memset(_ROM,0x00,0x10000);
+	memset(_ROM_SLOT,0x00,0x1000);
+	memset(_RAM_BANK1,0x00,0x1000);
 	Reset();
 }
 
@@ -80,6 +84,14 @@ void memory::writeROM(uint16_t address,uint8_t value)
 	if (address < 0x10000)
 		_ROM[address]=value;	
 }		
+
+void memory::writeROMSLOT(uint8_t address,uint8_t slot, uint8_t value)
+{
+	uint16_t laddr;
+	
+	laddr = 0x0100*slot+address;
+	_ROM_SLOT[laddr]=value;	
+}
 
 uint8_t memory::getBANK1()
 {
@@ -245,6 +257,10 @@ uint8_t memory::read(uint16_t address)
 	{
 		value = INTCXROM;
 	}
+	else if (address == SLOTC3ROM_READ)
+	{
+		value = SLOTC3ROM;
+	}
 	
 	/********** DEVICE SLOT SOFT SWITCHES **********/
 	else if (address >= 0xC090 && address <= 0xC0FF) 
@@ -290,7 +306,35 @@ uint8_t memory::read(uint16_t address)
 	/********** ROM HANDLER **********/
 	else if (address >= 0xC100 && address < 0xD000)
 	{
-		value = _ROM[address];
+		if (address <= 0xC2FF)
+		{
+			// Slot 1 - 2
+			if(INTCXROM)
+				value = _ROM[address];
+			else
+				value = _ROM_SLOT[address-0xC000];
+		}
+		else if (address <= 0xC3FF)
+		{
+			// Slot 3
+			if(INTCXROM == 0 && SLOTC3ROM == 0x80)
+				value = _ROM_SLOT[address-0xC000];
+			else
+				value = _ROM[address];
+		}
+		else if (address <= 0xC7FF)
+		{
+			// Slot 4 - 5 - 6 - 7
+			if(INTCXROM)
+				value = _ROM[address];
+			else
+				value = _ROM_SLOT[address-0xC000];
+		}
+		else
+		{	// Read motherboard ROM
+			value = _ROM[address];
+		}
+		
 	}
 	else if (address >= 0xD000)
 	{
@@ -377,6 +421,14 @@ void memory::write(uint16_t address,uint8_t value)
 	else if (address == INTCXROM_ON)
 	{
 		INTCXROM = 0x80;
+	}
+	else if (address == SLOTC3ROM_OFF)
+	{
+		SLOTC3ROM = 0x00;
+	}
+	else if (address == SLOTC3ROM_ON)
+	{
+		SLOTC3ROM = 0x80;
 	}
 	
 	/********** DEVICE SLOT SOFT SWITCHES **********/

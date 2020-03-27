@@ -3,6 +3,7 @@
 #include <string.h>
 #include "disk.h"
 #include "nibbilizer.h"
+#include "memory.h"
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -250,9 +251,8 @@ void drive::load(uint8_t data)
 	;	
 }
 
-disk::disk(uint8_t *_ROM)
+disk::disk()
 {
-	ROM = _ROM;
 	slot = 0;
 	drv1 = new drive(1);
 	drv2 = new drive(2);
@@ -263,16 +263,14 @@ disk::disk(uint8_t *_ROM)
 void disk::init(uint8_t _slot)
 {
 	int i;
-	uint16_t start_address;
 	slot = _slot;
-	start_address = 0xC000+_slot*0x100;
 	
 	for(i = 0; i < 0xFF; i++)
 	{
-		ROM[start_address+i]=_DISK_P5A[i];
+		mem->writeROMSLOT(i,_slot,_DISK_P5A[i]);
 	}
 	
-	printf("DISK II installed at ROM %04X \n",start_address);
+	printf("DISK II installed at slot %d \n",slot);
 }
 
 void disk::print()
