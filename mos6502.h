@@ -167,6 +167,8 @@ private:
 	// stack operations
 	inline void StackPush(uint8_t byte);
 	inline uint8_t StackPop();
+	
+	uint64_t elapsedCycles;
 
 public:
 	enum CycleMethod {
@@ -177,10 +179,12 @@ public:
 	void NMI();
 	void IRQ();
 	void Reset();
-	uint64_t Run(int32_t cycles,uint64_t& cycleCount,CycleMethod cycleMethod = CYCLE_COUNT);
+	void Step();
 	uint16_t Print();
 	uint16_t Dump(uint8_t* _A, uint8_t* _X,uint8_t* _Y,uint8_t* _SP, uint8_t* _P);
 	uint8_t getIllegalOpcode();
+	uint64_t getElapsedCycles();
+	void resetElapsedCycles();
 	void resetIllegalOpcode();
 };
 

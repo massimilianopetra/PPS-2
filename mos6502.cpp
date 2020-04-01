@@ -904,35 +904,35 @@ void mos6502::NMI()
 	return;
 }
 
-uint64_t mos6502::Run(
-	int32_t cyclesRemaining,
-	uint64_t& cycleCount,
-	CycleMethod cycleMethod
-) {
+void mos6502::Step() 
+{
 	uint8_t opcode;
 	Instr instr;
-	uint64_t cycleCountLocal = 0;
 
-	while(cyclesRemaining > 0 && !illegalOpcode)
+	if (!illegalOpcode)
 	{
 		// fetch
-		//printf("PC = %04X ",pc);
 		opcode = Read(pc++);
-		//printf("OPCODE %02X\n",opcode);
 		
 		// decode
 		instr = InstrTable[opcode];
 
+		// update elapsedCycles
+		elapsedCycles = instr.cycles;
+		
 		// execute
 		Exec(instr);
-		cycleCount += instr.cycles;
-		cycleCountLocal += instr.cycles;
-		
-		cyclesRemaining -=
-		cycleMethod == CYCLE_COUNT        ? instr.cycles : 1;
 	}
-	
-	return cycleCountLocal;
+}
+
+uint64_t mos6502::getElapsedCycles()
+{
+	return elapsedCycles;
+}
+
+void mos6502::resetElapsedCycles()
+{
+	elapsedCycles = 0;
 }
 
 void mos6502::Exec(Instr i)

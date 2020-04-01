@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000001000000
-UnitCount=20
+UnitCount=18
 
 [VersionInfo]
 Major=1
@@ -100,18 +100,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit9]
-FileName=rom.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit10]
-FileName=shell.h
+FileName=shell.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -121,7 +111,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit11]
-FileName=shell.cpp
+FileName=disk.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -140,18 +130,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit12]
-FileName=rom.h
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit13]
-FileName=disk.h
+FileName=nibbilizer.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -181,26 +161,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit14]
-FileName=disk.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit15]
-FileName=nibbilizer.h
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit16]
 FileName=nibbilizer.cpp
 CompileCpp=1
 Folder=
@@ -210,7 +170,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit17]
+[Unit15]
 FileName=memory.h
 CompileCpp=1
 Folder=
@@ -220,8 +180,28 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit18]
+[Unit16]
 FileName=memory.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit17]
+FileName=gui.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit18]
+FileName=gui.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -242,6 +222,26 @@ BuildCmd=
 
 [Unit20]
 FileName=gui.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit9]
+FileName=shell.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit12]
+FileName=disk.cpp
 CompileCpp=1
 Folder=
 Compile=1

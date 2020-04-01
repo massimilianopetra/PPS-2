@@ -259,7 +259,7 @@ int main( int argc, char *argv[] )
 		}
         
         /***** CPU CYCLE *****/
-        elapsed = cpu->Run(1,cycles);
+        cpu->Step();
         if (cpu->getIllegalOpcode())
         {
         	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
@@ -283,11 +283,14 @@ int main( int argc, char *argv[] )
 			shell_prompt(mem->getRAM(),mem->getROM(),cpu);	
 		}
         
+        elapsed = cpu->getElapsedCycles();
+        cpu->resetElapsedCycles();
+        
         /***** TIMER *****/
         IO->paddle_timer(elapsed);
         
         /***** DISK I/O *****/
-        IO->diskfetch();
+        IO->diskfetch(elapsed);
         
         io_count += elapsed;
         

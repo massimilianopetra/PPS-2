@@ -65,7 +65,7 @@ void paste(uint8_t *RAM,mos6502 *cpu)
 			cc=0;
 			while(RAM[_KBD] & 0x80)
 			{
-				pc = cpu->Run(1,cycles);
+				cpu->Step();
 			}
 			
 			if (ch == 0x0a)
@@ -81,7 +81,7 @@ void paste(uint8_t *RAM,mos6502 *cpu)
 		
 		// Wait keyboard ready
 		while(RAM[_KBD] & 0x80)
-			cpu->Run(1,cycles);
+			cpu->Step();
 		
 		IO->keyboard_init();
 	}	
@@ -106,7 +106,7 @@ void load(char *filename,uint8_t *RAM,mos6502 *cpu)
 		{
 			// Wait keyboard ready
 			while(RAM[_KBD] & 0x80)
-				cpu->Run(1,cycles);
+				cpu->Step();
 			
 			if (ch == 0x0a)
 				ch = 0x0d;
@@ -119,7 +119,7 @@ void load(char *filename,uint8_t *RAM,mos6502 *cpu)
 		
 		// Wait keyboard ready
 		while(RAM[_KBD] & 0x80)
-			cpu->Run(1,cycles);
+			cpu->Step();
 		
 		IO->keyboard_init();
 

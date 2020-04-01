@@ -164,7 +164,7 @@ int system_io::devicectrl(uint16_t address, uint8_t rw,uint8_t data)
 	// Check if slot refers to disk controller
 	if (slot == dsk->getslot())
 	{
-		value = dsk->controller(n,on,rw,data);
+		value = dsk->decoder(n,on,rw,data);
 	}
 	
 	return value;
@@ -184,9 +184,9 @@ void system_io::Reset()
 	}	
 }
 
-void system_io::diskfetch()
+void system_io::diskfetch(uint8_t cycles)
 {
-	dsk->fetch();
+	dsk->fetch(cycles);
 }
 
 void system_io::diskprint()
