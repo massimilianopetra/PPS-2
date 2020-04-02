@@ -95,7 +95,7 @@ int drive::mount(char * _filename)
 	
 	if ((strcmp(last,".dsk") == 0) || (strcmp(last,".do") == 0))
 		res = loaddsk(_filename);
-	else if (strcmp(last,".dsk") == 0)
+	else if (strcmp(last,".nib") == 0)
 		res = loadnib(_filename);
 		
 	if (res == 0)
@@ -148,6 +148,7 @@ int drive::loaddsk(char * _filename)
 
 int drive::loadnib(char * _filename)
 {
+	int i;
 	FILE *fp = NULL;
 	
 	fp=fopen(_filename,"rb");
@@ -157,18 +158,18 @@ int drive::loadnib(char * _filename)
 		nib->clear();
 		return 0;
 	}
-		
-	if (fread(image,1,DISK_SIZE,fp) != DISK_SIZE)
+	
+	for (i=0;i<NUM_TRACKS;i++)
 	{
-		printf("Drive %d: wrong disk format\n",drvnum);
-		return -1;		 
+		if (fread(nib->get_track(i),1,BYTES_PER_NIB_TRACK,fp) != BYTES_PER_NIB_TRACK)
+		{
+			printf("Drive %d: wrong disk format\n",drvnum);
+			return -1;		 
+		}
 	}
 		
 	fclose(fp);
-	
-	// Nibbilize disk image
-	nib->convert(image,0);
-	
+		
 	return 0;
 }
 
@@ -374,28 +375,34 @@ void disk::step(uint8_t cycles)
 		residue_cycles = residue_cycles + cycles;
 		for (i=0;i<residue_cycles/CYCLES_PER_STEP;i++)
 		{
-			sequencer = activedrv->getsequencer();
-			value = activedrv->read_pulse();
-			switch(sequencer)
+			if (read_write == 0 && shift_load == 0)
 			{
-				case 0:
-					break;
-				case 1:
-					// CLR + BYTEFLAG + READ PULSE
-					data_register = 2 | value;	
-					break;
-				default:
-					data_register = (data_register << 1) | value;
+				// READ / SHIFT  
+				sequencer = activedrv->getsequencer();
+				value = activedrv->read_pulse();
+				switch(sequencer)
+				{
+					case 0:
+						break;
+					case 1:
+						// CLR + BYTEFLAG + READ PULSE
+						data_register = 2 | value;	
+						break;
+					default:
+						data_register = (data_register << 1) | value;
+				}
 			}
+			else if (read_write == 0 && shift_load == 1)
+			{
+				data_register = activedrv->getwrite_protect() << 7;
+			}	
 		}	
 		residue_cycles = residue_cycles % CYCLES_PER_STEP;			
 	}
 }
 
 uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
-{
-	uint8_t value = data_register;
-	
+{	
 	//printf("<%d - %d>  ",n,on);
 	//activedrv->print();
 	//printf("\n");
@@ -470,7 +477,7 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 			read_write = on;
 			activedrv->setmode(on);
 			sequencer = 0;
-			residue_cycles = 0;
+			data_register = 0;
 			break;
 	}
 	
@@ -480,7 +487,7 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 	
 	// Reading even address read the latch
 	if (rw == 0 && on == 0)
-		return value;
+		return data_register;
 	else
 		return 0;
 }
