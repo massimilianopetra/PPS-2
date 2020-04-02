@@ -14,10 +14,10 @@ class drive
 		uint8_t mounted; 
 		int8_t track;
 		uint8_t* track_data;
+		uint16_t trackstat[NUM_TRACKS];
 		uint16_t ptr;
 		uint8_t curbyte;
 		uint8_t sequencer;
-		uint8_t rw;
 		uint8_t drvnum;
 		uint8_t write_protect;
 		nibbilizer *nib;
@@ -31,8 +31,6 @@ class drive
 		void print();
 		int mount(char * _filenane);
 		void umount();
-		void setmode(int rw);
-		uint8_t getmode();
 		uint8_t getwrite_protect();
 		void setwrite_protect(uint8_t on);
 		uint8_t getsequencer();
@@ -47,6 +45,7 @@ class drive
 		void savedsk();
 		void savedsk(char * _filename);
 		void debug(uint8_t *_drvnum, int8_t *_halftrk, uint16_t *_ptr);
+		void printstat();
 };
 
 class disk
@@ -79,6 +78,7 @@ class disk
 		void step(uint8_t cycles);
 		void print();
 		void debug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
+		void printstat();
 		
 };
 

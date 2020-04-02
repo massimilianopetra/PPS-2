@@ -193,6 +193,12 @@ void system_io::diskprint()
 {
 	dsk->print();
 }
+
+void system_io::diskprintstat()
+{
+	dsk->printstat();
+}
+
 void system_io::paddle_trigger()
 {
 	pdl0_timer = pdl0;

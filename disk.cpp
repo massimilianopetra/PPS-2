@@ -77,7 +77,6 @@ drive::drive(uint8_t num)
 	ptr = 0;
 	curbyte = 0;
 	phase = 0;
-	rw = 0;
 	drvnum = num;
 	sequencer = 0;
 	strcpy(filename,"");
@@ -88,6 +87,7 @@ drive::drive(uint8_t num)
 int drive::mount(char * _filename)
 {
 	int res;
+	int i;
 	char *last=NULL;
 	
 	printf("Mounting %s on drive %d ...\n",_filename,drvnum);
@@ -101,7 +101,10 @@ int drive::mount(char * _filename)
 	if (res == 0)
 	{
 		mounted = 1;
-		
+		for(i=0;i<NUM_TRACKS;i++)
+		{
+			trackstat[i]=0;
+		}
 		printf("Mount OK %d %s\n",drvnum,_filename);
 		
 		// Store filename without extension
@@ -220,6 +223,9 @@ void drive::savedsk(char * _filename)
 
 void drive::stepper(uint8_t p)
 {
+	if (mounted == 0)
+		return;
+		
 	switch(phase)
 	{
 		case 0:
@@ -274,16 +280,6 @@ uint8_t drive::ismounted()
 	return mounted;
 }
 
-void drive::setmode(int m)
-{
-	rw = m;
-}
-
-uint8_t drive::getmode()
-{
-	return rw;
-}
-
 uint8_t drive::getwrite_protect()
 {
 	return write_protect;
@@ -318,9 +314,30 @@ uint8_t drive::read_pulse()
 		ptr = ptr % BYTES_PER_NIB_TRACK;
 		curbyte = track_data[ptr];
 		sequencer = 0;
+		
+		// Update statistics
+		if (ptr == 0)
+			trackstat[track/2]++;
 	}
 
 	return value;
+}
+
+void drive::printstat()
+{
+	int i,r,c;
+	if (mounted == 0)
+		return;
+	
+	printf("============= DIRVE %d TRACK STATISTICS =============\n\n",this->drvnum);
+	printf("TRK TURN - TRK TURN - TRK TURN - TRK TURN - TRK TURN \n");
+	printf("-----------------------------------------------------\n");
+	i=0;
+	for(r=0;r<7;r++)
+	{
+		printf("%02d: %4d - %02d: %4d - %02d: %4d - %02d: %4d - %02d: %4d\n",i,trackstat[i],i+7,trackstat[i+7],i+14,trackstat[i+14],i+21,trackstat[i+21],i+28,trackstat[i+28]);
+		i++;
+	}
 }
 
 void drive::print()
@@ -364,6 +381,12 @@ void disk::print()
 	printf("DATA_REGISTER "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(data_register)); 
 }
 
+void disk::printstat()
+{
+	drv1->printstat();
+	printf("\n");
+	drv2->printstat();
+}
 void disk::step(uint8_t cycles)
 {
 	uint8_t value;
@@ -443,39 +466,11 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 		// SHIFT / LOAD C08C,X C08D,X
 		case 6:
 			shift_load = on;
-			/*
-			if (drive_off_on)
-			{			
-				if (on == 0)
-				{
-					// SHIFT
-					if (activedrv->getsequencer() == 8)
-					{
-						activedrv->clear();
-						data_register = 0x00;
-					}
-				}
-				else
-				{
-					if (activedrv->getmode())	
-					{
-						// Load data
-						data_register = data;
-					}
-					else
-					{
-						// Check write protect
-						value = 0x00; // TODO Check Write Protect
-					}			
-				}
-			}
-			*/
 			break;
 				
 		// READ / WRITE C08E,X C08F,X
 		case 7:
 			read_write = on;
-			activedrv->setmode(on);
 			sequencer = 0;
 			data_register = 0;
 			break;

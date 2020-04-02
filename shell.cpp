@@ -267,6 +267,10 @@ void shell_prompt(uint8_t *RAM,uint8_t *ROM,mos6502 *cpu)
 				printf("*** Syntax Error\n");
 			}
 		}
+		else if ( (strcmp(cmd,"diskstat") == 0) || (strcmp(cmd,"DISKSTAT") == 0) )
+		{
+			IO->diskprintstat();
+		}
 		else if ((strcmp(cmd,"mount") == 0) || (strcmp(cmd,"MOUNT") == 0))
 		{
 			i = sscanf(line, "%s %d",cmd,&drv);

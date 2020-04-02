@@ -89,6 +89,7 @@ class system_io
 		void disksavedsk();
 		void diskstep(uint8_t cycles);
 		void diskprint();
+		void diskprintstat();
 		void diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
 };
 
