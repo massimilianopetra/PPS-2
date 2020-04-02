@@ -66,7 +66,7 @@ class system_io
 		void sound();
 		void paddle_init();
 		void paddle_trigger();
-		void paddle_timer(uint64_t cycles);
+		void timer(uint64_t cycles);
 		uint8_t readPDL0();
 		uint8_t readPDL1();
 		uint8_t readPDL2();
@@ -87,7 +87,7 @@ class system_io
 		void disksavenib(char *filename, int drvnum);
 		void disksavenib();
 		void disksavedsk();
-		void diskfetch(uint8_t cycles);
+		void diskstep(uint8_t cycles);
 		void diskprint();
 		void diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
 };

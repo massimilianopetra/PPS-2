@@ -287,10 +287,10 @@ int main( int argc, char *argv[] )
         cpu->resetElapsedCycles();
         
         /***** TIMER *****/
-        IO->paddle_timer(elapsed);
+        IO->timer(elapsed);
         
         /***** DISK I/O *****/
-        IO->diskfetch(elapsed);
+        IO->diskstep(elapsed);
         
         io_count += elapsed;
         

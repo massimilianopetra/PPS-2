@@ -4,6 +4,7 @@
 #include "disk.h"
 #include "nibbilizer.h"
 #include "memory.h"
+#include "mos6502.h"
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -16,6 +17,8 @@
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0') 
 
+
+#define CYCLES_PER_STEP 4
 
 // Disk II Slot ROM  
 uint8_t _DISK_P5A[256] = {
@@ -57,6 +60,8 @@ uint8_t _DISK_P6A[256] = {
   0x08, 0x2D, 0x78, 0x70,  0x0A, 0x0A, 0x0A, 0x0A,  0x78, 0x18, 0x78, 0x08,  0x78, 0x18, 0x78, 0x08
 };
 
+extern mos6502 *cpu;
+
 drive::drive(uint8_t num)
 {
 	image = (uint8_t*)malloc(sizeof(uint8_t)*DISK_SIZE);
@@ -73,7 +78,6 @@ drive::drive(uint8_t num)
 	curbyte = 0;
 	phase = 0;
 	rw = 0;
-	clock = 0;
 	drvnum = num;
 	sequencer = 0;
 	strcpy(filename,"");
@@ -256,7 +260,6 @@ void drive::stepper(uint8_t p)
 		track_data = nib->get_track(track/2);
 		curbyte = track_data[ptr];
 		sequencer = 0;
-		clock = 0;
 	}
 }
 
@@ -300,51 +303,22 @@ uint8_t drive::clear()
 	sequencer = 0;
 }
 
-uint8_t drive::fetch()
-{
-	uint8_t value;
-
-	if (sequencer < 8)
-	{
-		value = (curbyte & 0x80) >> 7;
-		curbyte = curbyte << 1;
-		sequencer++;
-		if (sequencer == 8)
-		{
-			ptr++;
-			ptr = ptr % BYTES_PER_NIB_TRACK;
-			curbyte = track_data[ptr];
-		}
-	}
-	else
-	{
-		value = 0x80;
-	}
-
-	return value;
-}
-
 uint8_t drive::read_pulse()
 {
 	uint8_t value;
 	
 	value = (curbyte & 0x80) >> 7;
 	
-	clock++;
-	if (clock == 4)
+	sequencer++;
+	curbyte = curbyte << 1;
+	if (sequencer == 8)
 	{
-		clock = 0;
-		sequencer++;
-		curbyte = curbyte << 1;
-		if (sequencer == 8)
-		{
-			ptr++;
-			ptr = ptr % BYTES_PER_NIB_TRACK;
-			curbyte = track_data[ptr];
-			sequencer = 0;
-		}
+		ptr++;
+		ptr = ptr % BYTES_PER_NIB_TRACK;
+		curbyte = track_data[ptr];
+		sequencer = 0;
 	}
-	
+
 	return value;
 }
 
@@ -358,36 +332,11 @@ void drive::load(uint8_t data)
 	;	
 }
 
-logic_state_sequencer::logic_state_sequencer()
-{
-	reset();
-}
-
-void logic_state_sequencer::reset()
-{
-	address = 0;
-}
-
-uint8_t logic_state_sequencer::clock(uint8_t oa, uint8_t shift_load, uint8_t read_write, uint8_t read_pulse)
-{
-	uint8_t rom;
-	
-	rom = _DISK_P6A[address];
-	
-	// A0 = D5 ; A1 = oa ; A2 = shift_load ; A3 = read_write ; A4 = read_pulse ; A5 = D4 ; A6 = D6 ; A7 = D7 
-	address = ((rom & 0b00100000) >> 5) | (oa << 1) | (shift_load << 2) | (read_write << 3) | (read_pulse << 4) | ((rom & 0b00010000) << 1) | (rom & 0b11000000);
-	
-	rom = _DISK_P6A[address];
-	
-	printf("%02X \n",rom);
-	
-	return (rom & 0x0F); 
-}
-
 disk::disk()
 {
 	slot = 0;
-	sequencer = new logic_state_sequencer();
+	sequencer = 0;
+	residue_cycles = 0;
 	drv1 = new drive(1);
 	drv2 = new drive(2);
 	activedrv = drv1;
@@ -414,7 +363,7 @@ void disk::print()
 	printf("DATA_REGISTER "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(data_register)); 
 }
 
-void disk::fetch(uint8_t cycles)
+void disk::step(uint8_t cycles)
 {
 	uint8_t value;
 	int i;
@@ -422,57 +371,24 @@ void disk::fetch(uint8_t cycles)
 	if (drive_off_on) 
 	{
 		
-		value = activedrv->fetch();
-		
-		if (value != 0x80)
-			data_register = (data_register << 1) | value;
-		
-		
-		/*	
-		for(i=0;i<(2*cycles);i++)
+		residue_cycles = residue_cycles + cycles;
+		for (i=0;i<residue_cycles/CYCLES_PER_STEP;i++)
 		{
-			value = sequencer->clock((data_register&0x80)>>7,shift_load,read_write,activedrv->read_pulse());
-			
-			printf("=== CMD = %02X DATAREGISTER = %02X\n",value,data_register);
-			
-			// Logic State Sequencer Command
-			switch(value)
+			sequencer = activedrv->getsequencer();
+			value = activedrv->read_pulse();
+			switch(sequencer)
 			{
-				case 0x0:
-				case 0x1:
-				case 0x2:
-				case 0x3:
-				case 0x4:
-				case 0x5:
-				case 0x6:
-				case 0x7:
-					// CLR
-					data_register = 0;
+				case 0:
 					break;
-				case 0x8:
-				case 0xC:
-					// NOP
+				case 1:
+					// CLR + BYTEFLAG + READ PULSE
+					data_register = 2 | value;	
 					break;
-				case 0x9:
-					// SL0
-					data_register = data_register << 1;
-					break;
-				case 0xA:
-				case 0xE:
-					// SR
-					data_register = (activedrv->getwrite_protect() << 7) | (data_register >> 1);
-					break;
-				case 0xB:
-				case 0xF:
-					// LD
-					break;
-				case 0xD:
-					// SL1
-					data_register = (data_register << 1) | 1;
-					break;			
+				default:
+					data_register = (data_register << 1) | value;
 			}
-		}
-		*/					
+		}	
+		residue_cycles = residue_cycles % CYCLES_PER_STEP;			
 	}
 }
 
@@ -496,16 +412,17 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 				if (on) 
 				{
 					activedrv->stepper(n);	
-					//data_register = 0x00;
-					//value = 0x00;
-				}
-					
+				}	
 			}
+			sequencer = 0;
+			residue_cycles = 0;
 			break;
 			
 		// POWER C088,X C089,X
 		case 4:
-			drive_off_on = on;	
+			drive_off_on = on;
+			sequencer = 0;
+			residue_cycles = 0;
 			break;
 		
 		// DRIVE SELECT C08A,X C08B,X
@@ -519,6 +436,7 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 		// SHIFT / LOAD C08C,X C08D,X
 		case 6:
 			shift_load = on;
+			/*
 			if (drive_off_on)
 			{			
 				if (on == 0)
@@ -544,14 +462,21 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 					}			
 				}
 			}
+			*/
 			break;
 				
 		// READ / WRITE C08E,X C08F,X
 		case 7:
 			read_write = on;
 			activedrv->setmode(on);
+			sequencer = 0;
+			residue_cycles = 0;
 			break;
 	}
+	
+	// Step remaining clock
+	step(cpu->getElapsedCycles());
+	cpu->resetElapsedCycles();
 	
 	// Reading even address read the latch
 	if (rw == 0 && on == 0)
@@ -617,7 +542,8 @@ void disk::savedsk(char * _filename,int drvnum)
 
 void disk::reset()
 {
-	sequencer->reset();
+	sequencer = 0;
+	residue_cycles = 0;
 	data_register = 0;
 	shift_load = 0;
 	read_write = 0;

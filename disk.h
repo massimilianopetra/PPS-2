@@ -16,10 +16,9 @@ class drive
 		uint8_t* track_data;
 		uint16_t ptr;
 		uint8_t curbyte;
+		uint8_t sequencer;
 		uint8_t rw;
 		uint8_t drvnum;
-		uint8_t sequencer;
-		uint8_t clock;
 		uint8_t write_protect;
 		nibbilizer *nib;
 		char filename[256];
@@ -47,19 +46,7 @@ class drive
 		void savenib(char * _filename);
 		void savedsk();
 		void savedsk(char * _filename);
-		uint8_t fetch();
 		void debug(uint8_t *_drvnum, int8_t *_halftrk, uint16_t *_ptr);
-};
-
-class logic_state_sequencer
-{
-	private:
-		uint8_t address;
-		
-	public:
-		logic_state_sequencer();
-		void reset();
-		uint8_t  clock(uint8_t oa, uint8_t shift_load, uint8_t read_write, uint8_t read_pulse);
 };
 
 class disk
@@ -70,7 +57,8 @@ class disk
 		drive *drv2;
 		drive *activedrv;
 		
-		logic_state_sequencer *sequencer;
+		uint8_t sequencer;
+		uint8_t residue_cycles;
 		uint8_t data_register;
 		uint8_t shift_load;
 		uint8_t read_write;
@@ -88,7 +76,7 @@ class disk
 		void savenib(char * filename,int drvnum);
 		void savedsk();
 		void savedsk(char * filename,int drvnum);
-		void fetch(uint8_t cycles);
+		void step(uint8_t cycles);
 		void print();
 		void debug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2);
 		

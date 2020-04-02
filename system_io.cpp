@@ -184,9 +184,9 @@ void system_io::Reset()
 	}	
 }
 
-void system_io::diskfetch(uint8_t cycles)
+void system_io::diskstep(uint8_t cycles)
 {
-	dsk->fetch(cycles);
+	dsk->step(cycles);
 }
 
 void system_io::diskprint()
@@ -201,7 +201,7 @@ void system_io::paddle_trigger()
 	pdl3_timer = pdl3;
 }
 
-void system_io::paddle_timer(uint64_t cycles)
+void system_io::timer(uint64_t cycles)
 {
 	if (pdl0_timer > cycles)
 		pdl0_timer -= cycles;
