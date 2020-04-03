@@ -9,16 +9,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "shell.h"
+#include "memory.h"
 #include "mos6502.h"
 #include "system_io.h"
 #include "video.h"
 #include "SDL2/SDL.h"
    
-/* ************************** Prototype ********************** */
+/* ************************** Prototype ************************* */
 
 uint16_t d6502(uint16_t address, uint16_t nline);
+
+/* ********************* External Variables ********************** */
+
 extern int32_t xtal;
+extern mos6502 *cpu;
+extern uint8_t guidebug;
+extern uint8_t brk[0x10000];
+
+/* ********************* Private Variables *********************** */
 
 uint16_t __last_address = 0;
 
@@ -153,9 +163,8 @@ void print_hex(uint8_t *m, uint16_t address, uint16_t length)
 	printf("\n");
 }
 
-void shell_prompt(uint8_t *RAM,uint8_t *ROM,mos6502 *cpu)
+int shell_cmd(char *line, uint8_t offline)
 {
-	char line[256];
 	char cmd[32];
 	char operand[64];
 	char operand2[64];
@@ -163,172 +172,267 @@ void shell_prompt(uint8_t *RAM,uint8_t *ROM,mos6502 *cpu)
 	int param;
 	int len;
 	int i;
+	int slot;
 	int drv;
 	
-	while(1)
+	cmd[0]='\0';
+	param = sscanf(line,"%s %s %s",cmd,operand,operand2);
+	for (i=0;i<strlen(cmd);i++)
+		cmd[i] = (char)toupper((int)cmd[i]);
+	
+	if ((strcmp(cmd,"DONE") == 0) || (strcmp(cmd,"Q") == 0))
 	{
-		printf("> ");
-		fgets(line,255,stdin);
-		param = sscanf(line,"%s %s %s",cmd,operand,operand2);
-		
-		if ((strcmp(cmd,"done") == 0) ||  (strcmp(cmd,"DONE") == 0) || (strcmp(cmd,"q") == 0) || (strcmp(cmd,"Q") == 0))
+		return -999;
+	}
+	else if ((strcmp(cmd,"D") == 0) && offline == 0)
+	{
+		// Disassemble
+		if (param == 1)
 		{
-			return;
+			address = __last_address;
+			i = 10;
 		}
-		else if ( (strcmp(cmd,"d") == 0) || (strcmp(cmd,"D") == 0) )
+		else if (param == 2)
 		{
-			// Disassemble
-			if (param == 1)
-				address = __last_address;
-			else if (param == 2)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				i = 10;
-			}
-			else
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				sscanf(operand2,"%d",&i);				
-			}
-				
-			__last_address = d6502(address,i);
+			address = (uint16_t)strtol(operand, NULL, 16);
+			i = 10;
 		}
-		else if ( (strcmp(cmd,"pa") == 0) || (strcmp(cmd,"PA") == 0) )
+		else
 		{
-			// Print Ascii
-			if (param == 3)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = (uint16_t)strtol(operand2, NULL, 10);
-				print_ascii(RAM,address,len);
-			}
-			else if (param == 2)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = 8;
-				print_ascii(RAM,address,len);				
-			}
+			address = (uint16_t)strtol(operand, NULL, 16);
+			sscanf(operand2,"%d",&i);				
 		}
-		else if ( (strcmp(cmd,"phram") == 0) || (strcmp(cmd,"PHRAM") == 0) )
+			
+		__last_address = d6502(address,i);
+	}
+	else if ((strcmp(cmd,"BRK") == 0))
+	{
+		// Breakpoint
+		if (param == 2)
 		{
-			// Print Hex
-			if (param == 3)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = (uint16_t)strtol(operand2, NULL, 10);
-				print_hex(RAM,address,len);
-			}
-			else if (param == 2)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = 8;
-				print_hex(RAM,address,len);				
-			}
+			address = (uint16_t)strtol(operand, NULL, 16);
+			if (address > 0 && address < 0x10000)
+				brk[address]=1;
 		}
-		else if ( (strcmp(cmd,"phrom") == 0) || (strcmp(cmd,"PHROM") == 0) )
+		if (param == 3)
 		{
-			// Print Hex
-			if (param == 3)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = (uint16_t)strtol(operand2, NULL, 10);
-				print_hex(ROM,address,len);
-			}
-			else if (param == 2)
-			{
-				address = (uint16_t)strtol(operand, NULL, 16);
-				len = 8;
-				print_hex(ROM,address,len);				
-			}
+			address = (uint16_t)strtol(operand, NULL, 16);
+			if (address > 0 && address < 0x10000)
+				brk[address]=2;
 		}
-		else if ( (strcmp(cmd,"ss") == 0) || (strcmp(cmd,"SS") == 0) )
+		else
 		{
-			// Showswitches
-			printf("SCREEN SWITCHES = %02X\n",screen_switches);
+			printf("*** Syntax Error\n");
+		}
+	}
+	else if ((strcmp(cmd,"DELBRK") == 0))
+	{
+		// Delete Breakpoint
+		if (param == 2)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			if (address > 0 && address < 0x10000)
+				brk[address]=0;
+		}
+		else
+		{
+			printf("*** Syntax Error\n");
+		}
+	}
+	else if ((strcmp(cmd,"PA") == 0) && offline == 0)
+	{
+		// Print Ascii
+		if (param == 3)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = (uint16_t)strtol(operand2, NULL, 10);
+			print_ascii(mem->getRAM(),address,len);
+		}
+		else if (param == 2)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = 8;
+			print_ascii(mem->getRAM(),address,len);				
+		}
+	}
+	else if ((strcmp(cmd,"PHRAM") == 0) && offline == 0)
+	{
+		// Print Hex
+		if (param == 3)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = (uint16_t)strtol(operand2, NULL, 10);
+			print_hex(mem->getRAM(),address,len);
+		}
+		else if (param == 2)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = 8;
+			print_hex(mem->getRAM(),address,len);				
+		}
+	}
+	else if ((strcmp(cmd,"PHROM") == 0) && offline == 0)
+	{
+		// Print Hex
+		if (param == 3)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = (uint16_t)strtol(operand2, NULL, 10);
+			print_hex(mem->getROM(),address,len);
+		}
+		else if (param == 2)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			len = 8;
+			print_hex(mem->getROM(),address,len);				
+		}
+	}
+	else if ((strcmp(cmd,"SS") == 0) && offline == 0)
+	{
+		// Showswitches
+		printf("SCREEN SWITCHES = %02X\n",screen_switches);
 
-		}		
-		else if ( (strcmp(cmd,"savenib") == 0) || (strcmp(cmd,"SAVENIB") == 0) )
+	}		
+	else if ((strcmp(cmd,"SAVENIB") == 0) )
+	{
+		if (param == 3)
 		{
-			if (param == 3)
+			sscanf(operand,"%d",&i);
+			if (i>0 && i<3)
 			{
-				sscanf(operand,"%d",&i);
-				if (i>0 && i<3)
-				{
-					IO->disksavenib(operand2,i);	
-				}
-				else
-				{
-					printf("*** Disknumber out of range\n");
-				}
-				
+				IO->disksavenib(operand2,i);	
 			}
 			else
 			{
-				printf("*** Syntax Error\n");
-			}
-		}
-		else if ( (strcmp(cmd,"diskstat") == 0) || (strcmp(cmd,"DISKSTAT") == 0) )
-		{
-			IO->diskprintstat();
-		}
-		else if ((strcmp(cmd,"mount") == 0) || (strcmp(cmd,"MOUNT") == 0))
-		{
-			i = sscanf(line, "%s %d",cmd,&drv);
-			if (i == 2)
-			{
-				if (drv == 1 || drv == 2)
-				{
-					i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand2);
-					if (i == 1)
-					{
-						i = IO->diskmount(operand2,drv);
-					}
-					else
-					{	
-						printf("*** Mount wrong filename\n");
-					}
-				}
-				else
-				{
-					printf("*** Mount wrong disk number %d \n",drv);
-				}	
-			}
-			else
-			{
-				printf("*** Mount wrong mount command\n");
+				printf("*** Disknumber out of range\n");
 			}
 			
 		}
-		else if ( (strcmp(cmd,"xtal") == 0) || (strcmp(cmd,"XTAL") == 0) )
+		else
 		{
-			if (param == 2)
+			printf("*** Syntax Error\n");
+		}
+	}
+	else if ((strcmp(cmd,"DISKSTAT") == 0) && offline == 0)
+	{
+		IO->diskprintstat();
+	}
+	else if ((strcmp(cmd,"MOUNT") == 0))
+	{
+		i = sscanf(line, "%s %d",cmd,&drv);
+		if (i == 2)
+		{
+			if (drv == 1 || drv == 2)
 			{
-				sscanf(operand,"%d",&i);
-				if (i >=  1000000)
+				i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand2);
+				if (i == 1)
 				{
-					xtal = i;	
+					i = IO->diskmount(operand2,drv);
 				}
 				else
-				{
-					printf("*** XTAL too low\n");
+				{	
+					printf("*** Mount wrong filename\n");
 				}
-				
 			}
 			else
 			{
-				printf("*** Syntax Error\n");
+				printf("*** Mount wrong disk number %d \n",drv);
+			}	
+		}
+		else
+		{
+			printf("*** Mount wrong mount command\n");
+		}
+		
+	}
+	else if ((strcmp(cmd,"XTAL") == 0) )
+	{
+		if (param == 2)
+		{
+			sscanf(operand,"%d",&i);
+			if (i >=  1000000)
+			{
+				xtal = i;	
+			}
+			else
+			{
+				printf("*** XTAL too low\n");
 			}
 		}
-		else if ((strcmp(cmd,"reset") == 0) || (strcmp(cmd,"RESET") == 0))
+		else
 		{
-			printf("***** RESET *****\n");
-			cpu->Reset();
+			printf("*** Syntax Error\n");
 		}
-		else if (param >0)
+	}
+	else if ((strcmp(cmd,"RESET") == 0) && offline == 0) 
+	{
+		printf("***** RESET *****\n");
+		cpu->Reset();
+	}
+	else if (strcmp(cmd,"SLOT") == 0)
+	{
+		if (param == 3)
 		{
-			printf("*** Unknown Command\n");
+			sscanf(operand,"%d",&slot);
+			if (strcmp(operand2,"DISK") == 0)
+				IO->diskslot(slot);						
 		}
+	}
+	else if (strcmp(cmd,"ROM") == 0)
+	{	
+		if (param == 3)
+		{
+			address = strtoul (operand, NULL, 16);
+			if (address >= 0xC000)
+			{
+				i = mem->loadROM(address,operand2);
+				if (i > 0)
+					printf("upload %d bytes at %04X from: %s \n",i,address,operand2);
+			}
+		}
+		else
+		{
+			printf("*** Syntax Error\n");
+		}
+	}
+	else if (strcmp(cmd,"CHARGEN") == 0)
+	{
+		if (param == 2)
+		{
+			i = mem->loadCHARROM(operand);
+			if (i == 0)
+				printf("loaded character generator %s \n",operand);
+			else
+				printf("ERROR loading character generator %s [%d]\n",operand,i);
+		}
+		else
+		{
+			printf("*** Syntax Error\n");
+		}
+	}
+#ifdef WITHGUI
+	else if ((strcmp(cmd,"GUIDEBUG") == 0) && offline == 1)
+	{
+		guidebug = 0x80;
+		printf("*** GUI DEBUG ENABLED\n");
+	}
+#endif	
+	else if (param > 0 && offline == 0)
+	{
+		printf("*** Unknown Command [%s]\n",cmd);
+	}
+}
 
+void shell_prompt()
+{
+	char line[256];
+	int res = 0;
+	
+	while(res != -999)
+	{
+		printf("> ");
+		fgets(line,255,stdin);
+		res = shell_cmd(line, 0);
 	}
 }
 

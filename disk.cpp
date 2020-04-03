@@ -377,8 +377,11 @@ void disk::init(uint8_t _slot)
 
 void disk::print()
 {
-	activedrv->print();
-	printf("DATA_REGISTER "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(data_register)); 
+	if (drive_off_on)
+	{
+		activedrv->print();
+		printf("DATA_REGISTER "BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(data_register));
+	}
 }
 
 void disk::printstat()
@@ -463,12 +466,12 @@ uint8_t disk::decoder(uint8_t n, uint8_t on, uint8_t rw, uint8_t data)
 				activedrv = drv1;
 			break;
 		
-		// SHIFT / LOAD C08C,X C08D,X
+		// SHIFT / LOAD C08C,X C08D,X  Q6
 		case 6:
 			shift_load = on;
 			break;
 				
-		// READ / WRITE C08E,X C08F,X
+		// READ / WRITE C08E,X C08F,X  Q7
 		case 7:
 			read_write = on;
 			sequencer = 0;

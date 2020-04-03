@@ -904,7 +904,7 @@ void mos6502::NMI()
 	return;
 }
 
-void mos6502::Step() 
+uint16_t mos6502::Step() 
 {
 	uint8_t opcode;
 	Instr instr;
@@ -923,6 +923,8 @@ void mos6502::Step()
 		// execute
 		Exec(instr);
 	}
+	
+	return pc;
 }
 
 uint64_t mos6502::getElapsedCycles()

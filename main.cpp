@@ -30,7 +30,7 @@ uint8_t num_break = 0;
 int32_t xtal = XTAL;
 uint8_t guidebug = 0;
 
-
+uint8_t brk[0x10000];
 
 
 /* ************************** Prototype ********************** */
@@ -66,8 +66,9 @@ int main( int argc, char *argv[] )
 	Uint32 flag;
 	uint8_t isFullscreen;
 
- 	printf("***** PPS-2 ***** \n\n");
- 	
+	printf("=========================\n");
+ 	printf("=====     PPS-2     =====\n");
+ 	printf("=========================\n\n");
 	// Main loop flag
 	bool quit = false;
 	
@@ -90,6 +91,7 @@ int main( int argc, char *argv[] )
 	printf("init OK\n");
 			
 	// Load config file
+	printf("CONFIG  init ...  \n");
 	fpcfg = fopen("pps.cfg","r");
 	if (fpcfg == NULL)
 	{
@@ -99,106 +101,7 @@ int main( int argc, char *argv[] )
 	{
 		while(fgets(line,255,fpcfg) != NULL)
 		{
-			cmd[0] = '\0';
-			sscanf(line,"%s",cmd);
-			
-			if (strcmp(cmd,"ROM") == 0)
-			{
-				i = sscanf(line,"%s %s %s",cmd,p1,filename);	
-				if (i == 3)
-				{
-					start_address = strtoul (p1, NULL, 16);
-					if (start_address >= 0xC000)
-					{
-						i = mem->loadROM(start_address,filename);
-						if (i > 0)
-							printf("upload %d bytes at %04X from: %s \n",i,start_address,filename);
-					}
-				}
-			}
-			else if (strcmp(cmd,"CHARGEN") == 0)
-			{
-				i = sscanf(line,"%s %s",cmd,filename);	
-				if (i == 2)
-				{
-					i = mem->loadCHARROM(filename);
-					if (i == 0)
-						printf("loaded character generator %s \n",filename);
-					else
-						printf("ERROR loading character generator %s [%d]\n",filename,i);
-				}
-			}
-			else if (strcmp(cmd,"SLOT") == 0)
-			{
-				i = sscanf(line,"%s %s %s",cmd,p1,peripheral);	
-				if (i == 3)
-				{
-					sscanf(p1,"%d",&slot);
-					if (strcmp(peripheral,"DISK") == 0)
-						IO->diskslot(slot);						
-				}
-			}
-			else if (strcmp(cmd,"MOUNT") == 0)
-			{
-				i = sscanf(line, "%s %d",cmd,&drv);
-				if (i == 2)
-				{
-					if (drv == 1 || drv == 2)
-					{
-						i = sscanf(line, "%*[^']'%[^']'%*[^\n]",filename);
-						if (i == 1)
-						{
-							i = IO->diskmount(filename,drv);
-						}
-						else
-						{	
-							printf("*** Mount wrong filename\n");
-						}
-					}
-					else
-					{
-						printf("*** Mount wrong disk number %d \n",drv);
-					}	
-				}
-				else
-				{
-					printf("*** Mount wrong mount command\n");
-				}
-				
-			}
-			else if (strcmp(cmd,"BRK") == 0)
-			{
-				i = sscanf(line,"%s %s %s",cmd,p1);	
-				if (i == 2)
-				{
-					start_address = strtoul (p1, NULL, 16);
-						
-				}
-			}
-			else if (strcmp(cmd,"XTAL") == 0) 
-			{
-				i = sscanf(line,"%s %s %s",cmd,p1);
-				if (i == 2)
-				{
-					sscanf(p1,"%d",&i);
-					if (i >=  1000000)
-					{
-						xtal = i;
-						printf("SET XTAL: %.2f MHz\n",xtal/1000000.);	
-					}
-					else
-					{
-						printf("*** SET XTAL too low: %.2f MHz\n",i/1000000.);
-					}
-				}			
-			}
-#ifdef WITHGUI
-			else if (strcmp(cmd,"GUIDEBUG") == 0) 
-			{
-				guidebug = 0x80;
-				printf("*** GUI DEBUG ENABLED\n");
-			}
-#endif
+			shell_cmd(line,1);
 		}
 	}
 	
@@ -259,7 +162,17 @@ int main( int argc, char *argv[] )
 		}
         
         /***** CPU CYCLE *****/
-        cpu->Step();
+        pc = cpu->Step();
+        if (brk[pc])
+        {
+        	printf("*** BREAKPOINT at %04X \n",pc);
+        	if (brk[pc] == 1)
+        		debug_mode = 1;
+        	else
+        		shell_prompt();
+        		
+		}
+		
         if (cpu->getIllegalOpcode())
         {
         	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
@@ -280,7 +193,7 @@ int main( int argc, char *argv[] )
 			IO->diskprint();
 			printf("---------------------------------\n\n");
 			
-			shell_prompt(mem->getRAM(),mem->getROM(),cpu);	
+			shell_prompt();	
 		}
         
         elapsed = cpu->getElapsedCycles();
@@ -313,7 +226,7 @@ int main( int argc, char *argv[] )
         			break;
         		case 2:
         			// Load
-        			printf("***** LOAD *****\n");
+        			printf("***** LOAD TEXT *****\n");
         			printf("Insert filename :\n");
         			scanf("%s",filename);
         			load(filename,mem->getRAM(),cpu);
@@ -340,7 +253,7 @@ int main( int argc, char *argv[] )
         			break;
         		case 8:
         			// Shell Prompt
-        			shell_prompt(mem->getRAM(),mem->getROM(),cpu);
+        			shell_prompt();
         			break;
         		case 9:
         			// fULL SCREEN
