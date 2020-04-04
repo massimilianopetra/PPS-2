@@ -1,3 +1,26 @@
+/*
+ * disk.cpp 
+ *
+ * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> April, 2020
+ *
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ *  02111-1307  USA.
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -342,7 +365,7 @@ void drive::printstat()
 
 void drive::print()
 {
-	printf("DRV: %d HALFTRK: %02d TRK: %02d PTR: %04d BYTE: %02X PHA: %d SEQ: %02X \n",drvnum,track,track/2,ptr,track_data[ptr],phase,sequencer);
+	printf("DRV: %d HALFTRK: %02d TRK: %02d SEC:%02d PTR: %04d BYTE: %02X S-PHA: %d SEQ: %1d \n",drvnum,track,track/2,ptr/0x1a0,ptr,track_data[ptr],phase,sequencer);
 }
 
 void drive::load(uint8_t data)
@@ -420,6 +443,7 @@ void disk::step(uint8_t cycles)
 			}
 			else if (read_write == 0 && shift_load == 1)
 			{
+				// READ / LOAD
 				data_register = activedrv->getwrite_protect() << 7;
 			}	
 		}	
