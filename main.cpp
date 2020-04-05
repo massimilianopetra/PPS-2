@@ -1,7 +1,7 @@
 /*
  * main.cpp 
  *
- * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
+ * Author: Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
  *
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -167,7 +167,7 @@ int main( int argc, char *argv[] )
         	i = IO->keyboard();
         	video_refresh(mem->getRAM());
         	
-        	while (i != 7 && i != 6)
+        	while (i != 7 && i != 6 && i != 8)
 			{
 				i = IO->keyboard();
 			} 
@@ -177,6 +177,14 @@ int main( int argc, char *argv[] )
 				debug_mode = 0;
 				printf("***** DEBUG MODE OFF *****\n");
 			}	
+			
+			if (i == 8)
+			{
+				debug_mode = 0;
+				printf("***** DEBUG MODE OFF *****\n");
+				shell_prompt();
+			}	
+			
 		}
         
         /***** CPU CYCLE *****/

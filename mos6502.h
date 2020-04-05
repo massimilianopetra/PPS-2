@@ -1,9 +1,9 @@
 /*
  * mos6502.h 
  *
- * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
+ * Author: Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
  *
- * Derived from a work of Gianluca Ghettini
+ * Derived from a previous work by Gianluca Ghettini
  * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

@@ -1,7 +1,7 @@
 /*
  * gui.h 
  *
- * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> April, 2020
+ * Author: Massimiliano Petra <massimiliano.petra@gmail.com> April, 2020
  *
  *
  *  This program is free software; you can redistribute it and/or modify

@@ -1,7 +1,7 @@
 /*
  * shell.cpp 
  *
- * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
+ * Author: Massimiliano Petra <massimiliano.petra@gmail.com> February, 2020
  *
  *
  *  This program is free software; you can redistribute it and/or modify

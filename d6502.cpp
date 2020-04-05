@@ -1,9 +1,9 @@
 /*
  * d6505.cpp 
  *
- * Copyright (c) Massimiliano Petra <massimiliano.petra@gmail.com> April, 2020
+ * Author: Massimiliano Petra <massimiliano.petra@gmail.com> April, 2020
  *
- * Derived from a work of Brad Grantham
+ * Derived from a previous work by Brad Grantham
  *
  *
  *  This program is free software; you can redistribute it and/or modify
