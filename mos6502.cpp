@@ -952,6 +952,16 @@ uint16_t mos6502::Step()
 	return pc;
 }
 
+void mos6502::setPC(uint16_t _pc)
+{
+	pc = _pc;
+}
+
+uint16_t mos6502::getPC()
+{
+	return pc;
+}
+	
 uint64_t mos6502::getElapsedCycles()
 {
 	return elapsedCycles;

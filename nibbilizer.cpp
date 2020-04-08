@@ -47,9 +47,6 @@ uint8_t do_interleave[] =  {0X0, 0X7, 0xE, 0X6, 0xD, 0X5, 0xC, 0X4, 0xB, 0X3, 0x
 // .po sectors interleave
 uint8_t po_interleave[] =  {0X0, 0X8, 0x1, 0X9, 0x2, 0XA, 0x3, 0XB, 0x4, 0XC, 0x5, 0XD, 0X6, 0XE, 0X7, 0xF};
 
-// uint8_t phys_interleave[] = {0X0, 0xD, 0xB, 0x9, 0x7, 0x5, 0x3, 0x1, 0xE, 0xC, 0xA, 0x8, 0x6, 0x4, 0x2, 0xF};
-
-uint8_t phys_interleave[] = {0X0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF};
 
 nibbilizer::nibbilizer()
 {
@@ -107,7 +104,8 @@ void nibbilizer::convert(uint8_t *dsk, uint8_t interleave)
 			else
             	softsec = do_interleave[s];
             	
-            physsec = phys_interleave[s];
+            // physsec = phys_interleave[s];
+            physsec = s;
             
 			// Setup address field
             odd_even_encode(t,nib_sector.addr.track);

@@ -204,6 +204,8 @@ public:
 	void IRQ();
 	void Reset();
 	uint16_t Step();
+	uint16_t getPC();
+	void setPC(uint16_t _pc);
 	uint16_t Print();
 	uint16_t Dump(uint8_t* _A, uint8_t* _X,uint8_t* _Y,uint8_t* _SP, uint8_t* _P);
 	uint8_t getIllegalOpcode();

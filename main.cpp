@@ -192,11 +192,9 @@ int main( int argc, char *argv[] )
         if (brk[pc])
         {
         	printf("*** BREAKPOINT at %04X \n",pc);
-        	if (brk[pc] == 1)
-        		debug_mode = 1;
-        	else
-        		shell_prompt();
-        		
+        	debug_mode = 1;
+        	if (brk[pc] == 2)
+        		brk[pc] = 0;
 		}
 		
         if (cpu->getIllegalOpcode())

@@ -196,8 +196,18 @@ int shell_cmd(char *line, uint8_t offline)
 	for (i=0;i<strlen(cmd);i++)
 		cmd[i] = (char)toupper((int)cmd[i]);
 	
-	if ((strcmp(cmd,"DONE") == 0) || (strcmp(cmd,"Q") == 0))
+	if ((strcmp(cmd,"GO") == 0) || (strcmp(cmd,"G") == 0))
 	{
+		if (param == 2)
+		{
+			address = (uint16_t)strtol(operand, NULL, 16);
+			if (cpu != NULL)
+			{
+				// Set Program Counter to address (JMP emulation)
+				cpu->setPC(address);
+			}
+		}
+		
 		return -999;
 	}
 	else if ((strcmp(cmd,"D") == 0) && offline == 0)
@@ -224,13 +234,21 @@ int shell_cmd(char *line, uint8_t offline)
 	else if ((strcmp(cmd,"BRK") == 0))
 	{
 		// Breakpoint
-		if (param == 2)
+		if (param >= 2)
 		{
 			address = (uint16_t)strtol(operand, NULL, 16);
 			if (address > 0 && address < 0x10000)
 				brk[address]=1;
 		}
-		if (param == 3)
+		else
+		{
+			printf("*** BRK MISSING ADDRESS\n");
+		}
+	}
+	else if ((strcmp(cmd,"STEPTO") == 0))
+	{
+		// Breakpoint
+		if (param >= 2)
 		{
 			address = (uint16_t)strtol(operand, NULL, 16);
 			if (address > 0 && address < 0x10000)
@@ -238,7 +256,7 @@ int shell_cmd(char *line, uint8_t offline)
 		}
 		else
 		{
-			printf("*** Syntax Error\n");
+			printf("*** STEPTO MISSING ADDRESS\n");
 		}
 	}
 	else if ((strcmp(cmd,"DELBRK") == 0))
@@ -255,7 +273,7 @@ int shell_cmd(char *line, uint8_t offline)
 			printf("*** Syntax Error\n");
 		}
 	}
-	else if ((strcmp(cmd,"PA") == 0) && offline == 0)
+	else if ((strcmp(cmd,"PRINT") == 0) && offline == 0)
 	{
 		// Print Ascii
 		if (param == 3)
@@ -271,7 +289,7 @@ int shell_cmd(char *line, uint8_t offline)
 			print_ascii(mem->getRAM(),address,len);				
 		}
 	}
-	else if ((strcmp(cmd,"PHRAM") == 0) && offline == 0)
+	else if ((strcmp(cmd,"DUMPRAM") == 0) && offline == 0)
 	{
 		// Print Hex
 		if (param == 3)
@@ -287,7 +305,7 @@ int shell_cmd(char *line, uint8_t offline)
 			print_hex(mem->getRAM(),address,len);				
 		}
 	}
-	else if ((strcmp(cmd,"PHROM") == 0) && offline == 0)
+	else if ((strcmp(cmd,"DUMPROM") == 0) && offline == 0)
 	{
 		// Print Hex
 		if (param == 3)
@@ -303,7 +321,7 @@ int shell_cmd(char *line, uint8_t offline)
 			print_hex(mem->getROM(),address,len);				
 		}
 	}
-	else if ((strcmp(cmd,"SS") == 0) && offline == 0)
+	else if ((strcmp(cmd,"SHOWSWITCH") == 0) && offline == 0)
 	{
 		// Showswitches
 		printf("SCREEN SWITCHES = %02X\n",screen_switches);
@@ -394,7 +412,7 @@ int shell_cmd(char *line, uint8_t offline)
 				IO->diskslot(slot);						
 		}
 	}
-	else if (strcmp(cmd,"ROM") == 0)
+	else if (strcmp(cmd,"LOADROM") == 0)
 	{	
 		if (param == 3)
 		{
