@@ -51,9 +51,7 @@ uint8_t brk[0x10000];
 
 /* ************************** Prototype ********************** */
 
-
-
-uint16_t d6502(uint16_t address, uint16_t nline);
+uint16_t disassembly(uint16_t address, uint8_t source);
 
 
 
@@ -95,13 +93,6 @@ int main( int argc, char *argv[] )
 	
 	mem = new memory();
 	
-	i = mem->loadROM(0xD000,12288,"A2ROM.bin");
-	if (i != 12288)
-		printf("Failed to load A2ROM.bin \n");
-	i = mem->loadCHARROM("CHARGEN.bin");
-	if (i != 0)
-		printf("Failed to load CHARGEN.bin \n");
-
 	printf("init OK\n");
 	
 	printf("I/O   init ...  \n");
@@ -159,7 +150,7 @@ int main( int argc, char *argv[] )
 			printf("\n");
 	
         	//printf("[%04X] = %02X ; [%04X] = %02X \n",_KBD,RAM[_KBD],_KBDCR,RAM[_KBDCR] );
-        	d6502(pc,1);
+        	disassembly(pc,1);
         	printf("\n");
         	IO->diskprint();
 			printf("---------------------------------\n");
@@ -212,7 +203,7 @@ int main( int argc, char *argv[] )
 			if (_P & ZERO) printf("Z");
 			if (_P & CARRY) printf("C");
 			printf("\n");
-			d6502(pc,1);
+			disassembly(pc,1);
         	printf("\n");
 			IO->diskprint();
 			printf("---------------------------------\n\n");

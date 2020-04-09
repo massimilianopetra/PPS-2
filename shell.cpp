@@ -35,7 +35,7 @@
    
 /* ************************** Prototype ************************* */
 
-uint16_t d6502(uint16_t address, uint16_t nline);
+uint16_t disassembly(uint16_t address, uint8_t source);
 
 /* ********************* External Variables ********************** */
 
@@ -188,6 +188,7 @@ int shell_cmd(char *line, uint8_t offline)
 	int param;
 	int len;
 	int i;
+	int j;
 	int slot;
 	int drv;
 	
@@ -228,8 +229,12 @@ int shell_cmd(char *line, uint8_t offline)
 			address = (uint16_t)strtol(operand, NULL, 16);
 			sscanf(operand2,"%d",&i);				
 		}
-			
-		__last_address = d6502(address,i);
+		
+		__last_address = address;
+		for (j=0;j<i;j++)
+		{
+			__last_address = disassembly(__last_address,1);
+		}
 	}
 	else if ((strcmp(cmd,"BRK") == 0))
 	{

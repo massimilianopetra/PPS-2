@@ -29,14 +29,24 @@
 
 #include "memory.h"
 
-char *MNEMONIC[56] = {"ADC","AND","ASL","BCC","BCS","BEQ","BIT","BMI","BNE",
+#define NUM_OPCODE 56
+#define NUM_ADDRESSING 13
+
+/* ********************* Private Variables *********************** */
+
+uint16_t __org = 0x1000;
+
+
+/* *********************   Opcode Tables   *********************** */
+
+char *MNEMONIC[NUM_OPCODE] = {"ADC","AND","ASL","BCC","BCS","BEQ","BIT","BMI","BNE",
                       "BPL","BRK","BVC","BVS","CLC","CLD","CLI","CLV","CMP","CPX","CPY", 
 		              "DEC","DEX","DEY","EOR","INC","INX","INY","JMP","JSR","LDA","LDX",
 					  "LDY","LSR","NOP","ORA","PHA","PHP","PLA","PLP","ROL","ROR","RTI",
 					  "RTS","SBC","SEC","SED","SEI","STA","STX","STY","TAX","TAY","TSX",
 					  "TXA","TXS","TYA"};
 					  
-uint8_t OPCODE[56][13] ={ 
+uint8_t OPCODE[NUM_OPCODE][NUM_ADDRESSING] ={ 
 {0xff,0xff,0x69,0x65,0x75,0xff,0x6d,0x7d,0x79,0x61,0x71,0xff,0xff}, // adc
 {0xff,0xff,0x29,0x25,0x35,0xff,0x2d,0x3d,0x39,0x21,0x31,0xff,0xff}, // and
 {0xff,0x0a,0xff,0x06,0x16,0xff,0x0e,0x1e,0xff,0xff,0xff,0xff,0xff}, // asl
@@ -62,8 +72,8 @@ uint8_t OPCODE[56][13] ={
 {0x88,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // dey
 {0xff,0xff,0x49,0x45,0x55,0xff,0x4d,0x5d,0x59,0x41,0x51,0xff,0xff}, // eor
 {0xff,0xff,0xff,0xe6,0xf6,0xff,0xee,0xfe,0xff,0xff,0xff,0xff,0xff}, // inc
-{0xeb,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // inx
-{0xcb,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // iny
+{0xe8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // inx
+{0xc8,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // iny
 {0xff,0xff,0xff,0xff,0xff,0xff,0x4c,0xff,0xff,0xff,0xff,0xff,0x6c}, // jmp
 {0xff,0xff,0xff,0xff,0xff,0xff,0x20,0xff,0xff,0xff,0xff,0xff,0xff}, // jsr
 {0xff,0xff,0xa9,0xa5,0xb5,0xff,0xad,0xbd,0xb9,0xa1,0xb1,0xff,0xff}, // lda
@@ -94,3 +104,191 @@ uint8_t OPCODE[56][13] ={
 {0x9a,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}, // txs
 {0x98,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}  // tya
 };
+
+uint16_t disassembly(uint16_t address, uint8_t source)
+{
+	int i,m;
+	uint8_t opcode;
+	uint8_t operand1;
+	uint8_t operand2;
+	uint16_t _address = address;
+	uint8_t inst = 0xff;
+	uint8_t mode = 0xff;
+	
+	if (source)
+		opcode = mem->read(_address++);
+	else
+		opcode = mem->readRAM(_address++);
+	
+	if (opcode != 0xff)
+	{
+		for(i=0;i<NUM_OPCODE && inst == 0xff;i++)
+		{
+			for(m=0;m<NUM_ADDRESSING && inst == 0xff;m++)
+			{
+				
+				if (opcode == OPCODE[i][m])
+				{
+					inst = i;
+					mode = m;
+				}
+			}
+		}
+	}
+	
+	// printf("%d-%d \n",inst,mode);
+	
+	switch(mode)
+	{
+		case 0:
+			// Implied
+			printf("%04X   %02X         %s\n",address,opcode,MNEMONIC[inst]);
+			break;
+			
+		case 1:
+			// Accumulator
+			printf("%04X   %02X         %s A\n",address,opcode,MNEMONIC[inst]);
+			break;
+			
+		case 2:
+			// Immediate
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s #$%02X\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+			
+		case 3:
+			// Zero Page
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s $%02X\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+			
+		case 4:
+			// Zero Page,X
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s $%02X,X\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+
+		case 5:
+			// Zero Page,Y
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s $%02X,Y\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+
+		case 6:
+			// Absolute
+			if (source)
+			{
+				operand1 = mem->read(_address++);
+				operand2 = mem->read(_address++);
+			}
+			else
+			{
+				operand1 = mem->readRAM(_address++);
+				operand2 = mem->readRAM(_address++);
+			}
+			
+			printf("%04X   %02X %02X %02X   %s $%02X%02X\n",address,opcode,operand1,operand2,MNEMONIC[inst],operand2,operand1);
+			break;			
+			
+		case 7:
+			// Absolute,X
+			if (source)
+			{
+				operand1 = mem->read(_address++);
+				operand2 = mem->read(_address++);
+			}
+			else
+			{
+				operand1 = mem->readRAM(_address++);
+				operand2 = mem->readRAM(_address++);
+			}
+			
+			printf("%04X   %02X %02X %02X   %s $%02X%02X,X\n",address,opcode,operand1,operand2,MNEMONIC[inst],operand2,operand1);
+			break;
+			
+		case 8:
+			// Absolute,Y
+			if (source)
+			{
+				operand1 = mem->read(_address++);
+				operand2 = mem->read(_address++);
+			}
+			else
+			{
+				operand1 = mem->readRAM(_address++);
+				operand2 = mem->readRAM(_address++);
+			}
+			
+			printf("%04X   %02X %02X %02X   %s $%02X%02X,Y\n",address,opcode,operand1,operand2,MNEMONIC[inst],operand2,operand1);
+			break;
+			
+		case 9:
+			// Indirect,X  Indexed Indirect
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s ($%02X,X)\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+			
+		case 10:
+			// Indirect,Y  Indirect Indexed
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s ($%02X),Y\n",address,opcode,operand1,MNEMONIC[inst],operand1);
+			break;
+			
+		case 11:
+			// Relative
+			if (source)
+				operand1 = mem->read(_address++);
+			else
+				operand1 = mem->readRAM(_address++);
+			
+			printf("%04X   %02X %02X      %s $%04X\n",address,opcode,operand1,MNEMONIC[inst],(_address + ((operand1 < 128) ? operand1 : operand1 - 256)));
+			break;		
+		
+		case 12:
+			// Indirect
+			if (source)
+			{
+				operand1 = mem->read(_address++);
+				operand2 = mem->read(_address++);
+			}
+			else
+			{
+				operand1 = mem->readRAM(_address++);
+				operand2 = mem->readRAM(_address++);
+			}
+			
+			printf("%04X   %02X %02X %02X   %s ($%02X%02X)\n",address,opcode,operand1,operand2,MNEMONIC[inst],operand2,operand1);
+			break;
+						
+		default:
+			// Illegal instruction
+			printf("%04X   %02X         ???\n",address,opcode);	
+			break;	
+	}
+	
+	return _address;
+}
