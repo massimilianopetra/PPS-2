@@ -36,6 +36,7 @@
 /* ************************** Prototype ************************* */
 
 uint16_t disassembly(uint16_t address, uint8_t source);
+void shell_assembly();
 
 /* ********************* External Variables ********************** */
 
@@ -210,6 +211,11 @@ int shell_cmd(char *line, uint8_t offline)
 		}
 		
 		return -999;
+	}
+	else if ((strcmp(cmd,"A") == 0) && offline == 0)
+	{
+		// Asassemble
+		shell_assembly();
 	}
 	else if ((strcmp(cmd,"D") == 0) && offline == 0)
 	{
@@ -460,6 +466,8 @@ int shell_cmd(char *line, uint8_t offline)
 	{
 		printf("*** Unknown Command [%s]\n",cmd);
 	}
+	
+	return 0;
 }
 
 void shell_prompt()

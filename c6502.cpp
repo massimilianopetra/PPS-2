@@ -26,16 +26,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "memory.h"
 
 #define NUM_OPCODE 56
 #define NUM_ADDRESSING 13
+#define NUM_SYMBTABLE 1024
 
 /* ********************* Private Variables *********************** */
 
 uint16_t __org = 0x1000;
-
+char *SYMBTABLE[NUM_SYMBTABLE];
 
 /* *********************   Opcode Tables   *********************** */
 
@@ -105,6 +107,510 @@ uint8_t OPCODE[NUM_OPCODE][NUM_ADDRESSING] ={
 {0x98,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}  // tya
 };
 
+uint8_t validopcode(char *o)
+{
+	uint8_t inst = 0xff;
+	int i;
+	
+	for(i=0;i<NUM_OPCODE && inst == 0xff;i++)
+	{
+		if (strcmp(o,MNEMONIC[i]) == 0)
+		{
+			inst = i;
+		}
+	}
+
+	return inst;	
+}
+
+int getValue(char *o)
+{
+	int value;
+	int res;
+	
+	if(o[0] == '$')
+	{
+		// Hexdigit
+		res = sscanf(&(o[1]),"%X",&value);
+		if (res == 1)
+			return value;
+	}
+	else
+	{
+		// Decimal digit
+		res = sscanf(&(o[0]),"%d",&value);
+		if (res == 1)
+			return value;
+	}
+	
+	return -1;
+}
+
+int dopcode(uint8_t inst, char* operand)
+{
+	char tmp[256];
+	char *ptr;
+	int len;
+	uint8_t value;
+	int data1,data2;
+	int relative;
+
+	// Instruction
+	if (operand == NULL)
+	{
+		// Implied addressing
+		value = OPCODE[inst][0];
+		
+		if (value == 0xff)
+			return -3;
+		else
+		{
+			mem->writeRAM(__org++,value);
+			return 1;
+		}
+	}
+	else
+	{
+		len = strlen(operand); 
+		
+		if (strcmp(operand,"A") == 0)
+		{
+			// Accumulator addressing
+			value = OPCODE[inst][1];
+			
+			if (value == 0xff)
+				return -3;
+			else
+			{
+				mem->writeRAM(__org++,value);
+				return 1;
+			}				
+		}
+		else if (operand[0] == '#')
+		{
+			// Immediate
+			value = OPCODE[inst][2];
+			
+			if (value == 0xff)
+				return -3;
+			else
+			{
+				data1 = getValue(&(operand[1]));
+				
+				if (data1 < 0)  
+					return -2;
+				
+				if (data1 >255)
+					return -3;	
+					
+				mem->writeRAM(__org++,value);
+				mem->writeRAM(__org++,data1);
+				return 1;
+			}								
+		}
+		else if ((len > 2) && ((operand[len-2] == ',') && (operand[len-1] == 'X')))
+		{
+			// End with ,X
+
+			strcpy(tmp,operand);
+			tmp[len-2] = '\0';
+			
+			if ((data1 = getValue(tmp)) >= 0 )
+			{
+				if (data1 < 256)
+				{
+					// Zero  Page, X
+					value = OPCODE[inst][4];
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						return 1;
+					}
+				}
+				else if (data1 < 65536)
+				{
+					// Absolute, X
+					value = OPCODE[inst][7];
+					
+					data2 = (data1 & 0xff00) >> 8;
+					data1 = data1 & 0xff;
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						mem->writeRAM(__org++,data2);
+						return 1;
+					}					
+				}
+				else
+				{
+					return -1;
+				}						
+			}
+			else
+				return -2;			
+		}
+		else if ((len > 2) && ((operand[len-2] == ',') && (operand[len-1] == 'Y')))
+		{
+			// End with ,Y
+
+			strcpy(tmp,operand);
+			tmp[len-2] = '\0';
+			
+			if ((data1 = getValue(tmp)) >= 0 )
+			{
+				if (data1 < 256)
+				{
+					// Zero  Page, Y
+					value = OPCODE[inst][5];
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						return 1;
+					}
+				}
+				else if (data1 < 65536)
+				{
+					// Absolute, Y
+					value = OPCODE[inst][8];
+					
+					data2 = (data1 & 0xff00) >> 8;
+					data1 = data1 & 0xff;
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						mem->writeRAM(__org++,data2);
+						return 1;
+					}					
+				}
+				else
+				{
+					return -1;
+				}						
+			}
+			else
+				return -2;			
+		}
+		else if ((len > 4) && ((operand[0] == '(') && (operand[len-3] == ',') && (operand[len-2] == 'X' ) && (operand[len-1] == ')')))
+		{
+			// Match ( -- ,X)
+
+			strcpy(tmp,operand);
+			tmp[len-3] = '\0';
+			
+			if ((data1 = getValue( (&tmp[1]) )) >= 0 )
+			{
+				if (data1 < 256)
+				{
+					// Indirect,X
+					value = OPCODE[inst][9];
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						return 1;
+					}
+				}
+				else
+				{
+					return -3;
+				}						
+			}
+			else
+				return -2;			
+		}
+		else if ((len > 4) && ((operand[0] == '(') && (operand[len-3] == ')') && (operand[len-2] == ',' ) && (operand[len-1] == 'Y')))
+		{
+			// Match ( -- ),Y
+
+			strcpy(tmp,operand);
+			tmp[len-3] = '\0';
+			
+			if ((data1 = getValue( (&tmp[1]) )) >= 0 )
+			{
+				if (data1 < 256)
+				{
+					// Indirect,Y
+					value = OPCODE[inst][10];
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						return 1;
+					}
+				}
+				else
+				{
+					return -3;
+				}						
+			}
+			else
+				return -2;			
+		}
+		else if ((len > 2) && ((operand[0] == '(') && (operand[len-1] == ')')))
+		{
+			//Match ( -- )
+
+			strcpy(tmp,operand);
+			tmp[len-1] = '\0';
+			
+			if ((data1 = getValue( (&tmp[1]) )) >= 0 )
+			{
+				if (data1 < 65536)
+				{
+					// Indirect
+					value = OPCODE[inst][12];
+					
+					data2 = (data1 & 0xff00) >> 8;
+					data1 = data1 & 0xff;
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						mem->writeRAM(__org++,data2);
+						return 1;
+					}					
+				}
+				else
+				{
+					return -1;
+				}						
+			}
+			else
+				return -2;			
+		}
+		else if ((data1 = getValue(operand)) >= 0 )
+		{
+			value = OPCODE[inst][11];
+			
+			if (value != 0xff)
+			{
+				// Relative
+				if (data1 < 65536)
+				{
+					relative = (data1 - __org)-2;
+					
+					if (relative > 127)
+						return -4;
+					if (relative < -128)
+						return -4;
+					if (relative < 0)
+						relative += 256;
+						
+					mem->writeRAM(__org++,value);
+					mem->writeRAM(__org++,relative);
+					return 1;
+				}
+				else
+					return -1;
+			}
+			else
+			{
+				if (data1 < 256)
+				{
+					// Zero  Page
+					value = OPCODE[inst][3];
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						return 1;
+					}
+				}
+				else if (data1 < 65536)
+				{
+					// Absolute
+					value = OPCODE[inst][6];
+					
+					data2 = (data1 & 0xff00) >> 8;
+					data1 = data1 & 0xff;
+					
+					if (value == 0xff)
+						return -3;
+					else
+					{	
+						mem->writeRAM(__org++,value);
+						mem->writeRAM(__org++,data1);
+						mem->writeRAM(__org++,data2);
+						return 1;
+					}					
+				}
+				else
+				{
+					return -1;
+				}		
+			}
+		}
+		else
+			return -2;		
+	} 	
+}
+
+int assembly(char* line)
+{
+	int param;
+	int i;
+	int data1;
+	int data2;
+	char op1[256];
+	char op2[256];
+	char op3[256];
+	uint8_t inst = 0xff;
+	char *ptr;
+	
+	// Delete comment
+	ptr = strchr(line,';');
+	if (ptr != NULL)
+		ptr[0] = '\0';
+	
+	param = sscanf(line,"%s %s %s",op1,op2,op3);
+	
+	// OP1 TO UPPERCASE
+	for (i=0;i<strlen(op1);i++)
+	{
+		op1[i] = (char)toupper((int)op1[i]);
+	}
+	
+	// OP2 TO UPPERCASE
+	for (i=0;i<strlen(op2);i++)
+	{
+		op2[i] = (char)toupper((int)op2[i]);
+	}	
+
+	// OP2 TO UPPERCASE
+	for (i=0;i<strlen(op3);i++)
+	{
+		op3[i] = (char)toupper((int)op3[i]);
+	}	
+	
+	// Empty line
+	if (param < 0)
+		return 0;
+	
+	// END Statement
+	if (strcmp(op1,"END") == 0)
+	{
+		return -999;
+	}
+	
+	// .VALUE Statement
+	if (strcmp(op1,".VALUE") == 0)
+	{
+		data1 = getValue(op2);
+		printf("%d\n",data1);
+		return 0;
+	}
+	
+	// .BYTE Statement
+	if (strcmp(op1,".BYTE") == 0)
+	{
+		data1 = getValue(op2);
+		if (data1 < 0)
+		{
+			return -2;
+		}
+		else
+		{
+			if (data1 < 256)
+			{
+				mem->writeRAM(__org++,data1);
+				return 2;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	// .WORD Statement
+	if (strcmp(op1,".WORD") == 0)
+	{
+		data1 = getValue(op2);
+		if (data1 < 0)
+		{
+			return -2;
+		}
+		else
+		{
+			if (data1 < 65536)
+			{
+				data2 = (data1 & 0xff00) >> 8;
+				data1 = data1 & 0xff;
+				
+	
+				mem->writeRAM(__org++,data1);
+				mem->writeRAM(__org++,data2);
+				return 3;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		return 0;
+	}
+	
+	// ORG Statement
+	if (strcmp(op1,"ORG") == 0)
+	{
+		if (param == 2)
+		{
+			data1 = getValue(op2);
+			
+			if (data1 < 0)
+				return -2;
+			else
+				__org = data1;
+			
+			return 0;
+		}
+		else
+		{
+			return -2;
+		}
+	}	
+	
+	// OP1 is OPCODE ?
+	if ((inst = validopcode(op1)) != 0xff)
+	{
+		if (param == 1)
+			return dopcode(inst,NULL);
+		else
+			return dopcode(inst,op2);
+	}
+	
+	return -2;
+}
+
 uint16_t disassembly(uint16_t address, uint8_t source)
 {
 	int i,m;
@@ -135,8 +641,6 @@ uint16_t disassembly(uint16_t address, uint8_t source)
 			}
 		}
 	}
-	
-	// printf("%d-%d \n",inst,mode);
 	
 	switch(mode)
 	{
@@ -292,3 +796,47 @@ uint16_t disassembly(uint16_t address, uint8_t source)
 	
 	return _address;
 }
+
+void shell_assembly()
+{
+	char line[256];
+	int res = 0;
+	uint16_t old_org;
+	
+	while(res != -999)
+	{
+		printf("%04X: ",__org);
+		fgets(line,255,stdin);
+		
+		old_org = __org;
+		res = assembly(line);
+		
+		switch(res)
+		{
+			case 1:
+				disassembly(old_org,0);
+				break;
+			case 2:
+				printf("%04X: %02X\n",old_org,mem->readRAM(old_org));
+				break;	
+			case 3:
+				printf("%04X: %02X %02X\n",old_org,mem->readRAM(old_org),mem->readRAM(old_org+1));
+				break;	
+			case -1:
+				printf("=== Value Overflow\n");
+				break;
+			case -2:
+				printf("=== Syntax Error\n");
+				break;
+			case -3:
+				printf("=== Wrong Addressing Mode\n");
+				break;
+			case -4:
+				printf("=== Relative Addressing Too Far\n");
+				break;
+			default:
+				break;
+		}		
+	}
+}
+
