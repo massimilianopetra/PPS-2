@@ -38,6 +38,7 @@
 
 uint16_t __org = 0x1000;
 char *SYMBTABLE[NUM_SYMBTABLE];
+int SYMVALUE[NUM_SYMBTABLE];
 
 /* *********************   Opcode Tables   *********************** */
 
@@ -107,6 +108,74 @@ uint8_t OPCODE[NUM_OPCODE][NUM_ADDRESSING] ={
 {0x98,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}  // tya
 };
 
+uint8_t isalphadigit(char *o)
+{
+	int res = 1;
+	int i;
+	
+	for(i=0;i<strlen(o) && res == 1;i++)
+	{
+		if (isalnum(o[i]) == 0) 
+			res = 0;
+	}
+	
+	return res;
+}
+
+int issymbol(char *o)
+{
+	int res = -1;
+	int i;
+	
+	for(i=0;i<NUM_SYMBTABLE && res == -1;i++)
+	{
+		if (SYMBTABLE[i] != NULL &&  (strcmp(o,SYMBTABLE[i]) == 0 ))
+			res = i;
+	}
+	
+	return res;
+}
+
+void printsymbol()
+{
+	int i;
+	
+	for(i=0;i<NUM_SYMBTABLE;i++)
+	{
+		if (SYMBTABLE[i] != NULL)
+		{
+			printf("%-16s: $%04X\n",SYMBTABLE[i],SYMVALUE[i]);
+		}		
+	}
+}
+
+
+int addsymbol(char *o, int value)
+{
+	int res = -1;
+	int i;
+	
+	for(i=0;i<NUM_SYMBTABLE && res == -1;i++)
+	{
+		if (SYMBTABLE[i] == NULL)
+		{
+			SYMBTABLE[i] = (char *)malloc((strlen(o)+1)*sizeof(char));
+			if (SYMBTABLE[i] != NULL)
+			{
+				strcpy(SYMBTABLE[i],o);
+				SYMVALUE[i] = value;
+				res = i;
+			}
+			else
+			{
+				res = -2;
+			}
+		}
+	}
+	
+	return res;	
+}
+
 uint8_t validopcode(char *o)
 {
 	uint8_t inst = 0xff;
@@ -127,6 +196,7 @@ int getValue(char *o)
 {
 	int value;
 	int res;
+	int i;
 	
 	if(o[0] == '$')
 	{
@@ -135,8 +205,37 @@ int getValue(char *o)
 		if (res == 1)
 			return value;
 	}
+	else if (o[0] == '%')
+	{
+		value = 0;
+		res = 1;
+		for (i=strlen(o)-1;i>0 && value >= 0;i--)
+		{
+			if (o[i] == '1')
+			{
+				value = value + res;
+				res = res * 2;
+			}
+			else if (o[i] == '0')
+			{
+				res = res * 2;
+			}
+			else
+			{
+				value = -1;
+			}
+		}	
+		
+		return value;	
+	}
 	else
 	{
+		// Symbol
+		res = issymbol(o);
+		
+		if (res >= 0)
+			return SYMVALUE[res];
+		
 		// Decimal digit
 		res = sscanf(&(o[0]),"%d",&value);
 		if (res == 1)
@@ -430,7 +529,7 @@ int dopcode(uint8_t inst, char* operand)
 			}
 			else
 			{
-				if (data1 < 256)
+				if (data1 < 256 && inst != 27)  // 27 jmp Zero Page do not exist
 				{
 					// Zero  Page
 					value = OPCODE[inst][3];
@@ -491,7 +590,7 @@ int assembly(char* line)
 		ptr[0] = '\0';
 	
 	param = sscanf(line,"%s %s %s",op1,op2,op3);
-	
+		
 	// OP1 TO UPPERCASE
 	for (i=0;i<strlen(op1);i++)
 	{
@@ -504,7 +603,7 @@ int assembly(char* line)
 		op2[i] = (char)toupper((int)op2[i]);
 	}	
 
-	// OP2 TO UPPERCASE
+	// OP3 TO UPPERCASE
 	for (i=0;i<strlen(op3);i++)
 	{
 		op3[i] = (char)toupper((int)op3[i]);
@@ -518,14 +617,6 @@ int assembly(char* line)
 	if (strcmp(op1,"END") == 0)
 	{
 		return -999;
-	}
-	
-	// .VALUE Statement
-	if (strcmp(op1,".VALUE") == 0)
-	{
-		data1 = getValue(op2);
-		printf("%d\n",data1);
-		return 0;
 	}
 	
 	// .BYTE Statement
@@ -606,6 +697,33 @@ int assembly(char* line)
 			return dopcode(inst,NULL);
 		else
 			return dopcode(inst,op2);
+	}
+	else
+	{
+		if (isalphadigit(op1))
+		{
+
+			if (issymbol(op1) != -1)
+			{
+				return -5;
+			}
+			else
+			{
+				// EQU STATEMENT
+				if ((param == 3) && (strcmp(op2,"EQU") == 0))
+				{
+
+					data1 = getValue(op3);
+
+					if (data1 < 0)
+						return -2;
+					else
+						addsymbol(op1,data1);
+					
+					return 0;
+				}
+			}
+		}		
 	}
 	
 	return -2;
@@ -802,15 +920,51 @@ void shell_assembly()
 	char line[256];
 	int res = 0;
 	uint16_t old_org;
+	int param;
+	int i;
+	int data1;
+	char op1[256];
+	char op2[256];
 	
 	while(res != -999)
 	{
 		printf("%04X: ",__org);
 		fgets(line,255,stdin);
+
+		param = sscanf(line,"%s %s",op1,op2);
 		
-		old_org = __org;
-		res = assembly(line);
+		// OP1 TO UPPERCASE
+		for (i=0;i<strlen(op1);i++)
+		{
+			op1[i] = (char)toupper((int)op1[i]);
+		}
 		
+		// OP2 TO UPPERCASE
+		for (i=0;i<strlen(op2);i++)
+		{
+			op2[i] = (char)toupper((int)op2[i]);
+		}	
+	
+	
+		
+		if ((strcmp(op1,".VALUE") == 0) && (param == 2))
+		{
+			// .VALUE Statement
+			data1 = getValue(op2);
+			printf("$%04X   [%d]\n",data1,data1);
+			res = 0;
+		}
+		else if (strcmp(op1,".SYM") == 0)
+		{
+			printsymbol();
+			res = 0;
+		}
+		else
+		{
+			old_org = __org;
+			res = assembly(line);			
+		}
+	
 		switch(res)
 		{
 			case 1:
@@ -833,6 +987,9 @@ void shell_assembly()
 				break;
 			case -4:
 				printf("=== Relative Addressing Too Far\n");
+				break;
+			case -5:
+				printf("=== Duplicate Symbol\n");
 				break;
 			default:
 				break;
