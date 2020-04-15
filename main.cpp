@@ -26,6 +26,7 @@
 #include <conio.h>
 
 #include "mos6502.h"
+#include "cpu_6502.h"
 #include "system_io.h"
 #include "video.h"
 #include "shell.h"
@@ -36,10 +37,14 @@
 
 using namespace std;
 
-mos6502 *cpu = NULL;
+//mos6502 *cpu = NULL;
+cpu_6502 *cpu = NULL;
+
 
 
 uint64_t cycles=0;
+uint64_t halt=0;
+uint8_t tick_break = 0;
 uint8_t debug_mode = 0;
 uint16_t break_address[256];
 uint8_t num_break = 0;
@@ -76,6 +81,7 @@ int main( int argc, char *argv[] )
 	uint64_t io_count = 0;
 	uint64_t NOW = 0;
 	uint64_t LAST = 0;
+	
 	double deltaTime = 0;
 	FILE *fpcfg = NULL;
 	FILE *fp = NULL;
@@ -125,7 +131,10 @@ int main( int argc, char *argv[] )
 
 
 	printf("CPU   init ...  \n");	
-	cpu = new mos6502(busreader,buswriter);
+	
+	//cpu = new mos6502(busreader,buswriter);
+	cpu = new cpu_6502(busreader,buswriter);
+	
 	printf("init OK\n");
 	
 	printf("\n");
@@ -139,8 +148,9 @@ int main( int argc, char *argv[] )
         {
         	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
         	
-        	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X ",_A,_X,_Y,_SP,_P);
+        	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X TICK-%012lX   ",_A,_X,_Y,_SP,_P,cpu->getTick());
 
+			if (_P & NEGATIVE) printf("N");
 			if (_P & OVERFLOW) printf("O");
 			if (_P & BREAK) printf("B");
 			if (_P & DECIMAL) printf("D");
@@ -180,9 +190,14 @@ int main( int argc, char *argv[] )
         
         /***** CPU CYCLE *****/
         pc = cpu->Step();
-        if (brk[pc])
+        
+        if (brk[pc] || (tick_break == 1 && (cpu->getTick() >= halt)))   
         {
-        	printf("*** BREAKPOINT at %04X \n",pc);
+        	// Delet Halt command
+        	if (tick_break == 1 && (cpu->getTick() >= halt))
+        		tick_break = 0;
+        	
+        	printf("*** BREAKPOINT at %04X (FROM %04X)\n",pc,cpu->getFROM());
         	debug_mode = 1;
         	if (brk[pc] == 2)
         		brk[pc] = 0;
@@ -192,9 +207,9 @@ int main( int argc, char *argv[] )
         {
         	pc = cpu->Dump(&_A,&_X,&_Y,&_SP,&_P);
         	
-        	printf("*** ILLEGAL OPCODE %02X at %04X \n",mem->read(pc-1),pc-1);
+        	printf("*** ILLEGAL OPCODE %02X at %04X (FROM %04X)\n",mem->read(pc-1),pc-1,cpu->getFROM());
         	printf("\n");
-        	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X ",_A,_X,_Y,_SP,_P);
+        	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X TICK-%012lX   ",_A,_X,_Y,_SP,_P,cpu->getTick());
 
 			if (_P & OVERFLOW) printf("O");
 			if (_P & BREAK) printf("B");
@@ -244,7 +259,7 @@ int main( int argc, char *argv[] )
         			printf("***** LOAD TEXT *****\n");
         			printf("Insert filename :\n");
         			scanf("%s",filename);
-        			load(filename,mem->getRAM(),cpu);
+        			load(filename,mem->getRAM());
         			break;
         		case 3:
         			// Cleat Screen
@@ -259,7 +274,7 @@ int main( int argc, char *argv[] )
         		case 5:
         			// Quit
         			printf("***** PASTE *****\n");
-					paste(mem->getRAM(),cpu);
+					paste(mem->getRAM());
         			break;
         		case 6:
         			// Debug

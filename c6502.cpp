@@ -722,6 +722,17 @@ int assembly(char* line)
 					
 					return 0;
 				}
+				else if ((param > 1 ) && ((inst = validopcode(op2)) != 0xff))
+				{
+					addsymbol(op1,__org);
+					
+					if (param == 2)
+						return dopcode(inst,NULL);
+					else if (param == 3)
+						return dopcode(inst,op3);
+				}
+				else
+					return -2;
 			}
 		}		
 	}

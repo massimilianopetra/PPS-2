@@ -4,8 +4,8 @@
 CPP      = g++.exe -D__DEBUG__
 CC       = gcc.exe -D__DEBUG__
 WINDRES  = windres.exe
-OBJ      = main.o system_io.o video.o mos6502.o shell.o disk.o nibbilizer.o memory.o gui.o c6502.o
-LINKOBJ  = main.o system_io.o video.o mos6502.o shell.o disk.o nibbilizer.o memory.o gui.o c6502.o
+OBJ      = main.o system_io.o video.o mos6502.o shell.o disk.o nibbilizer.o memory.o gui.o c6502.o cpu_6502.o
+LINKOBJ  = main.o system_io.o video.o mos6502.o shell.o disk.o nibbilizer.o memory.o gui.o c6502.o cpu_6502.o
 LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -L"D:/SDL2-2.0.10/x86_64-w64-mingw32/lib" -static-libgcc -lmingw32 -lSDL2main -lSDL2 -g3
 INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include"
 CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++" -I"D:/SDL2-2.0.10/x86_64-w64-mingw32/include"
@@ -53,3 +53,6 @@ gui.o: gui.cpp
 
 c6502.o: c6502.cpp
 	$(CPP) -c c6502.cpp -o c6502.o $(CXXFLAGS)
+
+cpu_6502.o: cpu_6502.cpp
+	$(CPP) -c cpu_6502.cpp -o cpu_6502.o $(CXXFLAGS)

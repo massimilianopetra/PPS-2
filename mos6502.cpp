@@ -703,6 +703,8 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	instr.cycles = 2;
 	InstrTable[0x98] = instr;
 
+	status = 0;
+	tick = 0;
 	Reset();
 
 	return;
@@ -712,6 +714,7 @@ uint16_t mos6502::Print()
 {
 	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X ",A,X,Y,sp,status);
 
+	if (status & NEGATIVE) printf("N");
 	if (status & OVERFLOW) printf("O");
 	if (status & BREAK) printf("B");
 	if (status & DECIMAL) printf("D");
@@ -937,6 +940,7 @@ uint16_t mos6502::Step()
 	if (!illegalOpcode)
 	{
 		// fetch
+		FROM = pc;
 		opcode = Read(pc++);
 		
 		// decode
@@ -944,6 +948,7 @@ uint16_t mos6502::Step()
 
 		// update elapsedCycles
 		elapsedCycles = instr.cycles;
+		tick += elapsedCycles;
 		
 		// execute
 		Exec(instr);
@@ -960,6 +965,16 @@ void mos6502::setPC(uint16_t _pc)
 uint16_t mos6502::getPC()
 {
 	return pc;
+}
+
+uint64_t mos6502::getTick()
+{
+	return tick;
+}
+
+uint16_t mos6502::getFROM()
+{
+	return FROM;
 }
 	
 uint64_t mos6502::getElapsedCycles()

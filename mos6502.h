@@ -69,6 +69,7 @@ private:
 
 	// program counter
 	uint16_t pc;
+	uint16_t FROM;
 
 	// status register
 	uint8_t status;
@@ -193,6 +194,8 @@ private:
 	inline uint8_t StackPop();
 	
 	uint64_t elapsedCycles;
+	uint64_t tick;
+
 
 public:
 	enum CycleMethod {
@@ -205,6 +208,8 @@ public:
 	void Reset();
 	uint16_t Step();
 	uint16_t getPC();
+	uint64_t getTick();
+	uint16_t getFROM();
 	void setPC(uint16_t _pc);
 	uint16_t Print();
 	uint16_t Dump(uint8_t* _A, uint8_t* _X,uint8_t* _Y,uint8_t* _SP, uint8_t* _P);

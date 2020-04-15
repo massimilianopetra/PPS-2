@@ -29,6 +29,7 @@
 #include "shell.h"
 #include "memory.h"
 #include "mos6502.h"
+#include "cpu_6502.h"
 #include "system_io.h"
 #include "video.h"
 #include "SDL2/SDL.h"
@@ -41,9 +42,12 @@ void shell_assembly();
 /* ********************* External Variables ********************** */
 
 extern int32_t xtal;
-extern mos6502 *cpu;
+//extern mos6502 *cpu;
+extern cpu_6502 *cpu;
 extern uint8_t guidebug;
 extern uint8_t brk[0x10000];
+extern uint64_t halt;
+extern uint8_t tick_break;
 
 /* ********************* Private Variables *********************** */
 
@@ -68,7 +72,7 @@ uint8_t shell_query(char *prompt)
 
 	return query;
 }
-void paste(uint8_t *RAM,mos6502 *cpu)
+void paste(uint8_t *RAM)
 {
 	SDL_Event event;
 	uint64_t cycles;
@@ -114,7 +118,7 @@ void paste(uint8_t *RAM,mos6502 *cpu)
 	}	
 }
 
-void load(char *filename,uint8_t *RAM,mos6502 *cpu)
+void load(char *filename,uint8_t *RAM)
 {
 	FILE *fp=NULL;
 	int ch = 0;
@@ -254,6 +258,19 @@ int shell_cmd(char *line, uint8_t offline)
 		else
 		{
 			printf("*** BRK MISSING ADDRESS\n");
+		}
+	}
+	else if ((strcmp(cmd,"HALT") == 0))
+	{
+		// System Halt Overruning Tick
+		if (param >= 2)
+		{
+			halt = (uint64_t)strtol(operand, NULL, 16);
+			tick_break = 1;
+		}
+		else
+		{
+			printf("*** HALT MISSING TICK\n");
 		}
 	}
 	else if ((strcmp(cmd,"STEPTO") == 0))
