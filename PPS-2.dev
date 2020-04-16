@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000001000000
-UnitCount=20
+UnitCount=18
 
 [VersionInfo]
 Major=1
@@ -81,7 +81,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit7]
-FileName=mos6502.h
+FileName=shell.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -91,7 +91,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit10]
-FileName=disk.h
+FileName=nibbilizer.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -101,7 +101,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit11]
-FileName=disk.cpp
+FileName=nibbilizer.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -121,7 +121,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit13]
-FileName=nibbilizer.cpp
+FileName=memory.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -140,37 +140,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit6]
-FileName=mos6502.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit14]
-FileName=memory.h
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit15]
-FileName=memory.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit16]
 FileName=gui.cpp
 CompileCpp=1
 Folder=
@@ -180,7 +150,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit17]
+[Unit15]
 FileName=gui.h
 CompileCpp=1
 Folder=
@@ -190,8 +160,28 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit18]
+[Unit16]
 FileName=c6502.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit17]
+FileName=cpu_6502.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit18]
+FileName=cpu_6502.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -221,7 +211,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit9]
-FileName=shell.cpp
+FileName=disk.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -231,7 +221,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit12]
-FileName=nibbilizer.h
+FileName=memory.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -241,6 +231,16 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit8]
+FileName=disk.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit6]
 FileName=shell.h
 CompileCpp=1
 Folder=

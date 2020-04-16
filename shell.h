@@ -25,8 +25,6 @@
 #define __SHELL_H
 
 #include <stdint.h>
-#include "mos6502.h"
-
 
 extern uint16_t __last_address;
 

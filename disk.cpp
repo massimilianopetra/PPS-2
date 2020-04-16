@@ -27,7 +27,6 @@
 #include "disk.h"
 #include "nibbilizer.h"
 #include "memory.h"
-#include "mos6502.h"
 #include "cpu_6502.h"
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -84,7 +83,6 @@ uint8_t _DISK_P6A[256] = {
   0x08, 0x2D, 0x78, 0x70,  0x0A, 0x0A, 0x0A, 0x0A,  0x78, 0x18, 0x78, 0x08,  0x78, 0x18, 0x78, 0x08
 };
 
-//extern mos6502 *cpu;
 extern cpu_6502 *cpu;
 
 drive::drive(uint8_t num)

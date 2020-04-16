@@ -28,7 +28,6 @@
 #include <ctype.h>
 #include "shell.h"
 #include "memory.h"
-#include "mos6502.h"
 #include "cpu_6502.h"
 #include "system_io.h"
 #include "video.h"
@@ -42,7 +41,6 @@ void shell_assembly();
 /* ********************* External Variables ********************** */
 
 extern int32_t xtal;
-//extern mos6502 *cpu;
 extern cpu_6502 *cpu;
 extern uint8_t guidebug;
 extern uint8_t brk[0x10000];

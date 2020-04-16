@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <conio.h>
 
-#include "mos6502.h"
 #include "cpu_6502.h"
 #include "system_io.h"
 #include "video.h"
@@ -37,7 +36,6 @@
 
 using namespace std;
 
-//mos6502 *cpu = NULL;
 cpu_6502 *cpu = NULL;
 
 
@@ -132,7 +130,6 @@ int main( int argc, char *argv[] )
 
 	printf("CPU   init ...  \n");	
 	
-	//cpu = new mos6502(busreader,buswriter);
 	cpu = new cpu_6502(busreader,buswriter);
 	
 	printf("init OK\n");
@@ -150,13 +147,13 @@ int main( int argc, char *argv[] )
         	
         	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X TICK-%012lX   ",_A,_X,_Y,_SP,_P,cpu->getTick());
 
-			if (_P & NEGATIVE) printf("N");
-			if (_P & OVERFLOW) printf("O");
-			if (_P & BREAK) printf("B");
-			if (_P & DECIMAL) printf("D");
-			if (_P & INTERRUPT) printf("I");
-			if (_P & ZERO) printf("Z");
-			if (_P & CARRY) printf("C");
+			if (_P & _NEGATIVE) printf("N");
+			if (_P & _OVERFLOW) printf("O");
+			if (_P & _BREAK) printf("B");
+			if (_P & _DECIMAL) printf("D");
+			if (_P & _INTERRUPT) printf("I");
+			if (_P & _ZERO) printf("Z");
+			if (_P & _CARRY) printf("C");
 			printf("\n");
 	
         	//printf("[%04X] = %02X ; [%04X] = %02X \n",_KBD,RAM[_KBD],_KBDCR,RAM[_KBDCR] );
@@ -211,12 +208,12 @@ int main( int argc, char *argv[] )
         	printf("\n");
         	printf("A-%02X X-%02X Y-%02X S-%02X P-%02X TICK-%012lX   ",_A,_X,_Y,_SP,_P,cpu->getTick());
 
-			if (_P & OVERFLOW) printf("O");
-			if (_P & BREAK) printf("B");
-			if (_P & DECIMAL) printf("D");
-			if (_P & INTERRUPT) printf("I");
-			if (_P & ZERO) printf("Z");
-			if (_P & CARRY) printf("C");
+			if (_P & _OVERFLOW) printf("O");
+			if (_P & _BREAK) printf("B");
+			if (_P & _DECIMAL) printf("D");
+			if (_P & _INTERRUPT) printf("I");
+			if (_P & _ZERO) printf("Z");
+			if (_P & _CARRY) printf("C");
 			printf("\n");
 			disassembly(pc,1);
         	printf("\n");
