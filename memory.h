@@ -86,6 +86,8 @@ class memory
 		
 		int loadROM(uint16_t startAddress, uint16_t len, char *filename);
 		int loadROM(uint16_t startAddress, char *filename);
+		int loadRAM(uint16_t startAddress, char *filename);
+		int saveRAM(uint16_t startAddress, uint16_t len, char *filename);
 		int loadCHARROM(char* filename);
 		
 		uint8_t getBANK1();

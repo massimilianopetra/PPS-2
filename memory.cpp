@@ -177,6 +177,46 @@ int memory::loadROM(uint16_t startAddress, char *filename)
 	return i;	
 }
 
+int memory::loadRAM(uint16_t startAddress, char *filename)
+{
+	FILE *fp=NULL;
+	int i=0;
+	uint8_t b;
+	
+	fp=fopen(filename,"rb");
+	if (fp == NULL)
+		return -1;
+	
+	while(fread(&b,1,1,fp) == 1) 
+	{
+		writeRAM(startAddress+i,b);
+		i++;
+	}
+			
+	fclose(fp);
+	return i;	
+}
+
+int memory::saveRAM(uint16_t startAddress, uint16_t len, char *filename)
+{
+	FILE *fp=NULL;
+	int i=0;
+	uint8_t b;
+	
+	fp=fopen(filename,"wb");
+	if (fp == NULL)
+		return -1;
+
+	for(i=startAddress;i<startAddress+len;i++)
+	{
+		b=readRAM((uint16_t)i);
+		fwrite(&b,1,1,fp);
+	}
+		
+	fclose(fp);
+	return i;	
+}
+
 int memory::loadCHARROM(char* filename)
 {
 	FILE *fp=NULL;

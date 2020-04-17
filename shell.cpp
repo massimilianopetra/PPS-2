@@ -187,6 +187,7 @@ int shell_cmd(char *line, uint8_t offline)
 	char cmd[32];
 	char operand[64];
 	char operand2[64];
+	char operand3[64];
 	uint16_t address;
 	int param;
 	int len;
@@ -440,7 +441,8 @@ int shell_cmd(char *line, uint8_t offline)
 	}
 	else if (strcmp(cmd,"LOADROM") == 0)
 	{	
-		if (param == 3)
+		i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand2);
+		if (param == 3 && i == 1)
 		{
 			address = strtoul (operand, NULL, 16);
 			if (address >= 0xC000)
@@ -455,9 +457,41 @@ int shell_cmd(char *line, uint8_t offline)
 			printf("*** Syntax Error\n");
 		}
 	}
+	else if (strcmp(cmd,"LOADRAM") == 0)
+	{	
+		i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand2);
+		if (param == 3 && i == 1)
+		{
+			address = strtoul (operand, NULL, 16);
+			i = mem->loadRAM(address,operand2);
+			if (i > 0)
+				printf("upload %d bytes at %04X from: %s \n",i,address,operand2);
+		}
+		else
+		{
+			printf("*** Syntax Error\n");
+		}
+	}
+	else if (strcmp(cmd,"SAVERAM") == 0)
+	{	
+		i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand3);
+		if (param == 3 && i == 1)
+		{
+			address = strtoul (operand, NULL, 16);
+			len = (uint16_t)strtol(operand2, NULL, 10);
+			i = mem->saveRAM(address,len,operand3);
+			if (i > 0)
+				printf("saved %d bytes from %04X to: %s \n",len,address,operand3);
+		}
+		else
+		{
+			printf("*** Syntax Error\n");
+		}
+	}
 	else if (strcmp(cmd,"CHARGEN") == 0)
 	{
-		if (param == 2)
+		i = sscanf(line, "%*[^']'%[^']'%*[^\n]",operand);
+		if (param == 2 && i == 1)
 		{
 			i = mem->loadCHARROM(operand);
 			if (i == 0)
