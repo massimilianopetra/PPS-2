@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000001000000
-UnitCount=18
+UnitCount=20
 
 [VersionInfo]
 Major=1
@@ -191,7 +191,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit19]
-FileName=cpu_6502.cpp
+FileName=audio.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -201,7 +201,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit20]
-FileName=cpu_6502.h
+FileName=audio.cpp
 CompileCpp=1
 Folder=
 Compile=1

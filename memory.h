@@ -30,16 +30,17 @@
 #define _READ  0
 #define _WRITE 1
 
+// ROM Switches
 #define INTCXROM_OFF	0xC006
 #define INTCXROM_ON		0xC007
 #define INTCXROM_READ	0xC015
-
-
 
 #define SLOTC3ROM_OFF	0xC00A
 #define SLOTC3ROM_ON	0xC00B
 #define SLOTC3ROM_READ	0xC017
 
+// Sound
+#define _SOUND  		0xC030
 
 // BUS Acces Prototype
 

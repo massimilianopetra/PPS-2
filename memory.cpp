@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include "memory.h"
 #include "video.h"
+#include "audio.h"
 
 
 
@@ -281,9 +282,9 @@ uint8_t memory::read(uint16_t address)
 	{
 		_RAM[_KBD] = _RAM[_KBD] & 0x7f;
 	}
-	else if (address == _SOUND)
+	else if ((address & 0xFFF0) == _SOUND)
 	{
-		IO->sound();
+		AUDIO->toggle();
 	}
 	else if ((address & 0xFFF0) == _TIMER_TRIGGER)
 	{
@@ -470,9 +471,9 @@ void memory::write(uint16_t address,uint8_t value)
 	{
 		_RAM[_KBD] = _RAM[_KBD] & 0x7f;
 	}
-	else if (address == _SOUND)
+	else if ((address & 0xFFF0) == _SOUND)
 	{
-		IO->sound();	
+		AUDIO->toggle();	
 	}
 	else if ((address & 0xFFF0) == _TIMER_TRIGGER)
 	{

@@ -33,8 +33,6 @@
 #define _KBD			0xC000
 // Clear Keyboard Strobe     
 #define _KBDCR			0xC010
-// Sound
-#define _SOUND  		0xC030
 // Timer 
 #define _TIMER_TRIGGER 	0xC070
 // Serial I/O

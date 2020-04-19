@@ -25,6 +25,7 @@
 
 #include "SDL2/SDL.h"
 #include "system_io.h"
+#include "audio.h"
 
 
 /*    Keyboard scancode mapped on Appley ][ layout like
@@ -614,7 +615,7 @@ void system_io::disksavedsk()
 
 void system_io::sound()
 {
-	;
+	AUDIO->toggle();
 }
 
 void system_io::diskdebug(uint8_t *_activedrv,uint8_t *_pwr1, int8_t *_halftrk1, uint16_t *_ptr1,uint8_t *_pwr2, int8_t *_halftrk2, uint16_t *_ptr2)

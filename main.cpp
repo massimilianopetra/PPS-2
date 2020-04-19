@@ -31,6 +31,7 @@
 #include "shell.h"
 #include "memory.h"
 #include "gui.h"
+#include "audio.h"
 
 #define XTAL 1000000L
 
@@ -127,7 +128,12 @@ int main( int argc, char *argv[] )
 	//video_test();
 	printf("init OK\n");
 
-
+	printf("Audio init ...  \n");
+	AUDIO = new audio();
+	if (xtal == 1000000)
+		AUDIO->on();
+	printf("init OK\n");
+	
 	printf("CPU   init ...  \n");	
 	
 	cpu = new cpu_6502(busreader,buswriter);
@@ -315,6 +321,7 @@ int main( int argc, char *argv[] )
 			}
 			
 			video_refresh(mem->getRAM());
+			AUDIO->refresh();
 			
 #ifdef WITHGUI
 			if (gui_count == 0 && guidebug == 0x80)

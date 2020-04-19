@@ -32,6 +32,7 @@
 #include "system_io.h"
 #include "video.h"
 #include "SDL2/SDL.h"
+#include "audio.h"
    
 /* ************************** Prototype ************************* */
 
@@ -418,6 +419,18 @@ int shell_cmd(char *line, uint8_t offline)
 			else
 			{
 				printf("*** XTAL too low\n");
+			}
+			
+			if (offline == 0)
+			{
+				if (xtal == 1000000)
+				{
+					AUDIO->on();
+				}
+				else
+				{
+					AUDIO->off();
+				}
 			}
 		}
 		else
