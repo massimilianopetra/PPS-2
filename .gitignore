@@ -4,9 +4,6 @@
 # Compiled Dynamic libraries
 *.dll
 
-# ROM files
-*.bin
-
 # Compiled Static libraries
 *.a
 *.lib
